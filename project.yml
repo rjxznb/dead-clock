@@ -1,0 +1,86 @@
+name: DeadClock
+options:
+  bundleIdPrefix: com.rjxznb
+  deploymentTarget:
+    iOS: "16.0"
+  developmentLanguage: zh-Hans
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+  groupSortPosition: top
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: REPLACE_TEAM_ID
+    MARKETING_VERSION: "0.0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.10"
+    IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    # Automatic signing — Xcode's Cloud Signing flow. CI uses
+    # -allowProvisioningUpdates + ASC API key. We intentionally do NOT
+    # set CODE_SIGN_IDENTITY; forcing it conflicts with Automatic mode.
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_EMIT_LOC_STRINGS: NO
+  configs:
+    Debug:
+      ENABLE_TESTABILITY: YES
+      SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+    Release:
+      SWIFT_OPTIMIZATION_LEVEL: "-O"
+
+targets:
+  DeadClock:
+    type: application
+    platform: iOS
+    sources:
+      - path: DeadClock
+        excludes:
+          - "Info.plist"
+    resources:
+      - DeadClock/Assets.xcassets
+    dependencies:
+      - target: DeadClockWidget
+    entitlements:
+      path: DeadClock/DeadClock.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.rjxznb.deadclock
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjxznb.deadclock
+    info:
+      path: DeadClock/Info.plist
+      properties:
+        CFBundleDisplayName: DeadClock
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen:
+          UIColorName: AccentColor
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        ITSAppUsesNonExemptEncryption: false
+
+  DeadClockWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: DeadClockWidget
+        excludes:
+          - "Info.plist"
+      - path: DeadClock/Shared
+    entitlements:
+      path: DeadClockWidget/DeadClockWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.rjxznb.deadclock
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjxznb.deadclock.widget
+        SKIP_INSTALL: YES
+    info:
+      path: DeadClockWidget/Info.plist
+      properties:
+        CFBundleDisplayName: DeadClock
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension

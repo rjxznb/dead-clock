@@ -1,0 +1,23 @@
+# Xcode build artifacts
+build/
+DerivedData/
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+*.xcuserstate
+
+# XcodeGen regenerates .xcodeproj from project.yml each run, so the
+# generated project is intentionally ignored. Local devs run
+# `xcodegen generate` before opening Xcode.
+
+# Apple Developer artifacts — never commit
+*.p8
+AuthKey_*.p8
+*.mobileprovision
+*.cer
+*.p12
+
+# OS / IDE noise
+.DS_Store
+*.swp
+Thumbs.db

@@ -1,0 +1,122 @@
+name: TestFlight
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: testflight
+  cancel-in-progress: false   # never cancel an upload in flight
+
+jobs:
+  upload:
+    name: Archive + Upload to TestFlight
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen + xcbeautify
+        run: brew install xcodegen xcbeautify
+
+      - name: Generate .xcodeproj
+        run: xcodegen generate --quiet
+
+      - name: Write ASC API key to disk
+        env:
+          ASC_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+        run: |
+          # Safety check: empty secret → printf creates empty .p8 → downstream
+          # xcodebuild fails with cryptic "flag -authenticationKeyID is required"
+          # even though the flag IS in the command. Catch it here loudly.
+          if [ -z "$ASC_API_KEY_P8" ] || [ -z "$ASC_KEY_ID" ]; then
+            echo "::error::APP_STORE_CONNECT_API_KEY_P8 or _KEY_ID secret is empty"
+            exit 1
+          fi
+          mkdir -p ~/.appstoreconnect/private_keys
+          printf '%s' "$ASC_API_KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
+          chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
+          BYTES=$(wc -c < ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8)
+          if [ "$BYTES" -lt 200 ]; then
+            echo "::error::AuthKey .p8 is only $BYTES bytes — secret content is malformed"
+            exit 1
+          fi
+          cp ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8 $RUNNER_TEMP/AuthKey.p8
+
+      - name: Set CURRENT_PROJECT_VERSION = run_number + 100
+        run: |
+          # Each TestFlight upload needs a unique (version, build) pair.
+          # +100 offset gives headroom if you ever do manual uploads outside CI.
+          BUILD_NUM=$((${{ github.run_number }} + 100))
+          echo "BUILD_NUM=$BUILD_NUM" >> $GITHUB_ENV
+
+      - name: Archive
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project DeadClock.xcodeproj \
+            -scheme DeadClock \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath ./build/DeadClock.xcarchive \
+            -allowProvisioningUpdates \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" \
+            CURRENT_PROJECT_VERSION=$BUILD_NUM \
+            DEVELOPMENT_TEAM=REPLACE_TEAM_ID \
+            archive | xcbeautify
+
+      - name: Export IPA
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -exportArchive \
+            -archivePath ./build/DeadClock.xcarchive \
+            -exportPath ./build/export \
+            -exportOptionsPlist ExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" | xcbeautify
+
+      - name: Upload to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          IPA=$(find ./build/export -name "*.ipa" | head -1)
+          UPLOAD_LOG=$(mktemp)
+          # altool exits 0 even when validation fails (daily upload limit,
+          # duplicate build, missing icon, etc.). Tee + grep for failure
+          # markers so the workflow step actually fails on these cases.
+          xcrun altool --upload-app \
+            -f "$IPA" \
+            -t ios \
+            --apiKey "$ASC_KEY_ID" \
+            --apiIssuer "$ASC_ISSUER_ID" 2>&1 | tee "$UPLOAD_LOG"
+          if grep -qE "Validation failed|UPLOAD FAILED|ERROR:|Upload limit reached" "$UPLOAD_LOG"; then
+            echo "::error::altool reported a validation/upload error"
+            exit 1
+          fi
+
+      - name: Upload archive artifact (for forensics)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcarchive-${{ github.sha }}
+          path: build/DeadClock.xcarchive
+          retention-days: 7

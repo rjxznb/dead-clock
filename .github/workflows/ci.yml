@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-simulator:
+    name: Build for iOS Simulator + Screenshot
+    # macos-15 has Xcode 16+ by default. macos-14 (Xcode 15.4) can't read
+    # the objectVersion 77 .xcodeproj that current XcodeGen generates.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        # Apple requires iOS 26 SDK (Xcode 26+) for App Store submission
+        # as of 2026. macos-15 ships several Xcode versions side-by-side;
+        # this picks the newest installed.
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen + xcbeautify
+        run: brew install xcodegen xcbeautify
+
+      - name: Show Xcode + SDK
+        run: |
+          xcodebuild -version
+          xcrun --show-sdk-version --sdk iphonesimulator
+
+      - name: Generate .xcodeproj
+        run: xcodegen generate --quiet
+
+      - name: Pick a stable iOS Simulator
+        id: pick-sim
+        run: |
+          DEVICE_UDID=$(xcrun simctl list devices available -j | jq -r '.devices | to_entries | .[] | select(.key | contains("iOS")) | .value[] | select(.name == "iPhone 15 Pro") | .udid' | head -1)
+          if [ -z "$DEVICE_UDID" ]; then
+            DEVICE_UDID=$(xcrun simctl list devices available -j | jq -r '.devices | to_entries | .[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone")) | .udid' | head -1)
+          fi
+          echo "Using device UDID: $DEVICE_UDID"
+          echo "udid=$DEVICE_UDID" >> "$GITHUB_OUTPUT"
+
+      - name: Build for Simulator
+        env:
+          UDID: ${{ steps.pick-sim.outputs.udid }}
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project DeadClock.xcodeproj \
+            -scheme DeadClock \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=${UDID}" \
+            -derivedDataPath ./DerivedData \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            build | xcbeautify
+
+      - name: Boot simulator + install + screenshot
+        env:
+          UDID: ${{ steps.pick-sim.outputs.udid }}
+        run: |
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+          APP_PATH=$(find DerivedData/Build/Products/Debug-iphonesimulator -maxdepth 2 -name "DeadClock.app" | head -1)
+          xcrun simctl install "$UDID" "$APP_PATH"
+          xcrun simctl launch "$UDID" com.rjxznb.deadclock
+          sleep 3
+          mkdir -p screenshots
+          xcrun simctl io "$UDID" screenshot screenshots/01-launch.png
+          ls -la screenshots/
+
+      - name: Upload screenshots artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-screenshots-${{ github.sha }}
+          path: screenshots/
+          retention-days: 14
+          if-no-files-found: error
