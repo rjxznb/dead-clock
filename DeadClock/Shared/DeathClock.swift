@@ -18,7 +18,10 @@ enum DeathClock {
         get {
             let t = defaults.double(forKey: birthDateKey)
             if t != 0 { return Date(timeIntervalSince1970: t) }
-            return Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
+            // 默认值必须固化保存：否则“当前时间减 25 年”随时间漂移，倒计时恒定不动
+            let def = Calendar.current.date(byAdding: .year, value: -25, to: Date()) ?? Date()
+            defaults.set(def.timeIntervalSince1970, forKey: birthDateKey)
+            return def
         }
         set { defaults.set(newValue.timeIntervalSince1970, forKey: birthDateKey) }
     }
