@@ -73,7 +73,7 @@ jobs:
             -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" \
             CURRENT_PROJECT_VERSION=$BUILD_NUM \
-            DEVELOPMENT_TEAM=REPLACE_TEAM_ID \
+            DEVELOPMENT_TEAM=Q3BK52FQT9 \
             archive | xcbeautify
 
       - name: Export IPA
