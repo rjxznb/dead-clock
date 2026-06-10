@@ -7,6 +7,7 @@ struct CountdownView: View {
 
     @State private var theme = ThemeStore.current
     @State private var photos = ThemeStore.loadPhotos()
+    @StateObject private var parallax = MotionParallax()
     @State private var streak = JournalStore.streak
     @State private var totalMoments = JournalStore.totalCount
     @State private var checkedToday = JournalStore.entry() != nil
@@ -36,6 +37,17 @@ struct CountdownView: View {
         }
         .onAppear {
             ReminderManager.reschedule()
+            if theme == .photo { parallax.start() }
+        }
+        .onDisappear {
+            parallax.stop()
+        }
+        .onChange(of: theme) { newTheme in
+            if newTheme == .photo {
+                parallax.start()
+            } else {
+                parallax.stop()
+            }
         }
     }
 
@@ -86,6 +98,9 @@ struct CountdownView: View {
                                 .opacity(fade)
                         }
                     }
+                    // 陀螺仪视差：放大一点再随姿态平移，边缘不露底
+                    .scaleEffect(1.08)
+                    .offset(parallax.offset)
                     .overlay(Color.black.opacity(0.45))
                 }
             }

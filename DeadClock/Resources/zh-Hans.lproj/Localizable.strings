@@ -66,6 +66,16 @@
 "poster.title" = "分享海报";
 "poster.preview" = "OneLife · 美好瞬间";
 
+/* 总结海报 */
+"summary.menu" = "总结";
+"summary.week" = "本周";
+"summary.month" = "本月";
+"summary.year" = "今年";
+"summary.card.title" = "时光总结";
+"summary.moments.unit" = "个美好瞬间";
+"summary.days.coverage" = "%2$lld 天中记录了 %1$lld 天";
+"summary.empty" = "这段时间还没有记录。";
+
 /* 提醒通知 */
 "reminder.title" = "✨ 记录今天";
 "reminder.body" = "今天最让你开心或最有意义的一件事是什么？睡前花 30 秒记下来。";

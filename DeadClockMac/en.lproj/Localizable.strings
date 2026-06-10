@@ -1,0 +1,8 @@
+"mac.menubar.format" = "⏳ %lld d";
+"mac.quit" = "Quit OneLife";
+"headline.normal" = "Seize the day · You still have";
+"unit.seconds.caption" = "seconds";
+"progress.normal" = "%.6f%% of the journey lived";
+"settings.birthdate" = "Date of birth";
+"settings.expectancy" = "Life expectancy";
+"settings.age.format" = "%lld yrs";

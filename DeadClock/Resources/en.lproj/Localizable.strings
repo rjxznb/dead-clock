@@ -66,6 +66,16 @@
 "poster.title" = "Share Poster";
 "poster.preview" = "OneLife · Beautiful moment";
 
+/* Summary posters */
+"summary.menu" = "Recap";
+"summary.week" = "This week";
+"summary.month" = "This month";
+"summary.year" = "This year";
+"summary.card.title" = "Time Recap";
+"summary.moments.unit" = "beautiful moments";
+"summary.days.coverage" = "Recorded on %1$lld of %2$lld days";
+"summary.empty" = "No moments recorded in this period yet.";
+
 /* Reminder notification */
 "reminder.title" = "✨ Record today";
 "reminder.body" = "What made you happiest or felt most meaningful today? Take 30 seconds before bed to write it down.";

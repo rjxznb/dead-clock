@@ -1,0 +1,8 @@
+"mac.menubar.format" = "⏳ %lld 天";
+"mac.quit" = "退出 OneLife";
+"headline.normal" = "把握当下 · 你还拥有";
+"unit.seconds.caption" = "秒";
+"progress.normal" = "人生旅程已走过 %.6f%%";
+"settings.birthdate" = "出生日期";
+"settings.expectancy" = "预期寿命";
+"settings.age.format" = "%lld 岁";

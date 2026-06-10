@@ -82,3 +82,31 @@ jobs:
           path: screenshots/
           retention-days: 14
           if-no-files-found: error
+
+  build-macos:
+    name: Build macOS Menu Bar App
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen + xcbeautify
+        run: brew install xcodegen xcbeautify
+
+      - name: Generate .xcodeproj
+        run: xcodegen generate --quiet
+
+      - name: Build for macOS
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project DeadClock.xcodeproj \
+            -scheme DeadClockMac \
+            -configuration Debug \
+            -destination "platform=macOS" \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            build | xcbeautify

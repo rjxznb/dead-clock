@@ -4,6 +4,7 @@ options:
   deploymentTarget:
     iOS: "16.0"
     watchOS: "9.0"
+    macOS: "13.0"
   developmentLanguage: en
   xcodeVersion: "16.0"
   createIntermediateGroups: true
@@ -64,6 +65,34 @@ targets:
         # Portrait-only is allowed iff the app opts out of iPad
         # multitasking; without this Apple rejects with ITMS-90474.
         UIRequiresFullScreen: true
+        ITSAppUsesNonExemptEncryption: false
+
+  DeadClockMac:
+    type: application
+    platform: macOS
+    deploymentTarget: "13.0"
+    sources:
+      - path: DeadClockMac
+        excludes:
+          - "Info.plist"
+      - path: DeadClock/Shared/DeathClock.swift
+    resources:
+      - DeadClockMac/Assets.xcassets
+    entitlements:
+      path: DeadClockMac/DeadClockMac.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjxznb.deadclock
+    info:
+      path: DeadClockMac/Info.plist
+      properties:
+        CFBundleDisplayName: OneLife
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSUIElement: true
+        LSApplicationCategoryType: public.app-category.productivity
         ITSAppUsesNonExemptEncryption: false
 
   DeadClockWatch:

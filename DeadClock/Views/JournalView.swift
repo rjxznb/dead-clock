@@ -4,6 +4,7 @@ struct JournalView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var entries = JournalStore.load()
     @State private var selected: JournalEntry?
+    @State private var summaryPeriod: SummaryPeriod?
 
     var body: some View {
         NavigationStack {
@@ -52,6 +53,20 @@ struct JournalView: View {
             .navigationTitle(Text("journal.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Menu {
+                        ForEach(SummaryPeriod.allCases) { period in
+                            Button {
+                                summaryPeriod = period
+                            } label: {
+                                Text(period.titleKey)
+                            }
+                        }
+                    } label: {
+                        Label("summary.menu", systemImage: "sparkles.rectangle.stack")
+                    }
+                    .disabled(entries.isEmpty)
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("settings.done") { dismiss() }
                 }
@@ -59,6 +74,9 @@ struct JournalView: View {
         }
         .sheet(item: $selected) { entry in
             PosterSheet(entry: entry)
+        }
+        .sheet(item: $summaryPeriod) { period in
+            SummaryPosterSheet(period: period)
         }
     }
 
