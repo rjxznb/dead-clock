@@ -101,15 +101,20 @@ jobs:
           IPA=$(find ./build/export -name "*.ipa" | head -1)
           UPLOAD_LOG=$(mktemp)
           # altool exits 0 even when validation fails (daily upload limit,
-          # duplicate build, missing icon, etc.). Tee + grep for failure
-          # markers so the workflow step actually fails on these cases.
+          # duplicate build, missing icon, etc.). Tee + check for the final
+          # success marker; transient "ERROR:" lines from retried requests
+          # (e.g. one-off HTTP 500s) must not fail an upload that succeeded.
           xcrun altool --upload-app \
             -f "$IPA" \
             -t ios \
             --apiKey "$ASC_KEY_ID" \
             --apiIssuer "$ASC_ISSUER_ID" 2>&1 | tee "$UPLOAD_LOG"
-          if grep -qE "Validation failed|UPLOAD FAILED|ERROR:|Upload limit reached" "$UPLOAD_LOG"; then
+          if grep -qE "Validation failed|UPLOAD FAILED|Upload limit reached" "$UPLOAD_LOG"; then
             echo "::error::altool reported a validation/upload error"
+            exit 1
+          fi
+          if ! grep -q "UPLOAD SUCCEEDED" "$UPLOAD_LOG"; then
+            echo "::error::altool did not confirm a successful upload"
             exit 1
           fi
 
