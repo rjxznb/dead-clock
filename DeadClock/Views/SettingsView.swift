@@ -8,8 +8,8 @@ struct SettingsView: View {
     @State private var lifeExpectancy = DeathClock.lifeExpectancyYears
 
     @State private var theme = ThemeStore.current
-    @State private var photoItem: PhotosPickerItem?
-    @State private var hasPhoto = ThemeStore.loadPhoto() != nil
+    @State private var photoItems: [PhotosPickerItem] = []
+    @State private var photoCount = ThemeStore.photoCount
 
     @State private var reminderOn = ReminderManager.isEnabled
     @State private var reminderTime: Date = {
@@ -51,8 +51,10 @@ struct SettingsView: View {
                     }
 
                     if theme == .photo {
-                        PhotosPicker(selection: $photoItem, matching: .images) {
-                            Label(hasPhoto ? "更换背景照片" : "选择背景照片",
+                        PhotosPicker(selection: $photoItems,
+                                     maxSelectionCount: 9,
+                                     matching: .images) {
+                            Label(photoCount > 0 ? "更换背景照片（当前 \(photoCount) 张）" : "选择背景照片（可多选）",
                                   systemImage: "photo.on.rectangle.angled")
                         }
                     }
@@ -81,12 +83,18 @@ struct SettingsView: View {
                     }
                 }
             }
-            .onChange(of: photoItem) { item in
-                guard let item else { return }
+            .onChange(of: photoItems) { items in
+                guard !items.isEmpty else { return }
                 Task {
-                    if let data = try? await item.loadTransferable(type: Data.self) {
-                        ThemeStore.savePhoto(data)
-                        hasPhoto = true
+                    var datas: [Data] = []
+                    for item in items {
+                        if let data = try? await item.loadTransferable(type: Data.self) {
+                            datas.append(data)
+                        }
+                    }
+                    if !datas.isEmpty {
+                        ThemeStore.savePhotos(datas)
+                        photoCount = datas.count
                     }
                 }
             }
@@ -127,6 +135,7 @@ struct SettingsView: View {
             ReminderManager.reschedule()
         }
         WidgetCenter.shared.reloadAllTimelines()
+        PhoneSync.push()   // 同步到 Apple Watch
     }
 }
 

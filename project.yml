@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: com.rjxznb
   deploymentTarget:
     iOS: "16.0"
+    watchOS: "9.0"
   developmentLanguage: zh-Hans
   xcodeVersion: "16.0"
   createIntermediateGroups: true
@@ -41,6 +42,7 @@ targets:
       - DeadClock/Assets.xcassets
     dependencies:
       - target: DeadClockWidget
+      - target: DeadClockWatch
     entitlements:
       path: DeadClock/DeadClock.entitlements
       properties:
@@ -63,6 +65,62 @@ targets:
         # multitasking; without this Apple rejects with ITMS-90474.
         UIRequiresFullScreen: true
         ITSAppUsesNonExemptEncryption: false
+
+  DeadClockWatch:
+    type: application
+    platform: watchOS
+    deploymentTarget: "9.0"
+    sources:
+      - path: DeadClockWatch
+        excludes:
+          - "Info.plist"
+      - path: DeadClock/Shared/DeathClock.swift
+    resources:
+      - DeadClockWatch/Assets.xcassets
+    dependencies:
+      - target: DeadClockWatchWidget
+    entitlements:
+      path: DeadClockWatch/DeadClockWatch.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.rjxznb.deadclock
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjxznb.deadclock.watchkitapp
+        TARGETED_DEVICE_FAMILY: "4"
+    info:
+      path: DeadClockWatch/Info.plist
+      properties:
+        CFBundleDisplayName: OneLife
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: com.rjxznb.deadclock
+        WKRunsIndependentlyOfCompanionApp: true
+
+  DeadClockWatchWidget:
+    type: app-extension
+    platform: watchOS
+    deploymentTarget: "9.0"
+    sources:
+      - path: DeadClockWatchWidget
+        excludes:
+          - "Info.plist"
+      - path: DeadClock/Shared/DeathClock.swift
+    entitlements:
+      path: DeadClockWatchWidget/DeadClockWatchWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.rjxznb.deadclock
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rjxznb.deadclock.watchkitapp.widget
+        TARGETED_DEVICE_FAMILY: "4"
+        SKIP_INSTALL: YES
+    info:
+      path: DeadClockWatchWidget/Info.plist
+      properties:
+        CFBundleDisplayName: OneLife
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
 
   DeadClockWidget:
     type: app-extension

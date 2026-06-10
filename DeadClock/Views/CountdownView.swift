@@ -6,7 +6,7 @@ struct CountdownView: View {
     @State private var showJournal = false
 
     @State private var theme = ThemeStore.current
-    @State private var photo = ThemeStore.loadPhoto()
+    @State private var photos = ThemeStore.loadPhotos()
     @State private var streak = JournalStore.streak
     @State private var totalMoments = JournalStore.totalCount
     @State private var checkedToday = JournalStore.entry() != nil
@@ -59,18 +59,38 @@ struct CountdownView: View {
                 .hueRotation(.degrees(
                     date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 36) * 10))
         case .photo:
-            if let photo {
-                GeometryReader { geo in
-                    Image(uiImage: photo)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: geo.size.width, height: geo.size.height)
-                        .clipped()
-                        .overlay(Color.black.opacity(0.45))
-                }
-            } else {
+            if photos.isEmpty {
                 Color.black
+            } else {
+                GeometryReader { geo in
+                    // 多张照片每 20 秒轮播一次，结尾 2 秒淡入下一张
+                    let interval = 20.0
+                    let t = date.timeIntervalSinceReferenceDate / interval
+                    let index = Int(t) % photos.count
+                    let next = (index + 1) % photos.count
+                    let frac = t - t.rounded(.down)
+                    let fade = photos.count > 1 ? max(0, (frac - 0.9) * 10) : 0
+
+                    ZStack {
+                        Image(uiImage: photos[index])
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .clipped()
+                        if fade > 0 {
+                            Image(uiImage: photos[next])
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: geo.size.width, height: geo.size.height)
+                                .clipped()
+                                .opacity(fade)
+                        }
+                    }
+                    .overlay(Color.black.opacity(0.45))
+                }
             }
+        case .red:
+            Color.black
         }
     }
 
@@ -84,7 +104,7 @@ struct CountdownView: View {
         return VStack(spacing: 26) {
             Spacer()
 
-            Text("把握当下 · 你还拥有")
+            Text(theme.isFearMode ? "距离死亡还剩" : "把握当下 · 你还拥有")
                 .font(.subheadline)
                 .foregroundStyle(palette.textSecondary)
                 .tracking(6)
@@ -121,7 +141,8 @@ struct CountdownView: View {
                 }
                 .frame(height: 8)
 
-                Text(String(format: "人生旅程已走过 %.6f%%", progress * 100))
+                Text(String(format: theme.isFearMode ? "人生已逝去 %.6f%%" : "人生旅程已走过 %.6f%%",
+                            progress * 100))
                     .font(.system(.footnote, design: .monospaced))
                     .foregroundStyle(palette.textSecondary)
             }
@@ -149,7 +170,7 @@ struct CountdownView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Theme.actionGradient, in: Capsule())
+                        .background(palette.actionBackground, in: Capsule())
                 }
 
                 sideButton(icon: "gearshape", label: "设置", palette: palette) {
@@ -193,7 +214,7 @@ struct CountdownView: View {
 
     private func refresh() {
         theme = ThemeStore.current
-        photo = ThemeStore.loadPhoto()
+        photos = ThemeStore.loadPhotos()
         streak = JournalStore.streak
         totalMoments = JournalStore.totalCount
         checkedToday = JournalStore.entry() != nil

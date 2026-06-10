@@ -6,6 +6,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     case light
     case gradient
     case photo
+    case red
 
     var id: String { rawValue }
 
@@ -14,9 +15,13 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .dark: return "深色"
         case .light: return "浅色"
         case .gradient: return "流动渐变"
-        case .photo: return "自定义照片"
+        case .photo: return "照片轮播"
+        case .red: return "醒目红"
         }
     }
+
+    /// 醒目红主题连文案一起切回“恐惧模式”
+    var isFearMode: Bool { self == .red }
 }
 
 struct ThemePalette {
@@ -26,6 +31,7 @@ struct ThemePalette {
     let cardBackground: Color
     let barTrack: Color
     let numberGradient: LinearGradient
+    let actionBackground: LinearGradient
     let isLight: Bool
 }
 
@@ -50,7 +56,28 @@ extension AppTheme {
                         Color(red: 0.55, green: 0.35, blue: 0.85),
                     ],
                     startPoint: .leading, endPoint: .trailing),
+                actionBackground: Theme.actionGradient,
                 isLight: true)
+        case .red:
+            return ThemePalette(
+                textPrimary: .white,
+                textSecondary: Color(white: 0.55),
+                accent: Color(red: 1.0, green: 0.27, blue: 0.23),
+                cardBackground: Color.white.opacity(0.06),
+                barTrack: Color.white.opacity(0.12),
+                numberGradient: LinearGradient(
+                    colors: [
+                        Color(red: 1.00, green: 0.27, blue: 0.23),
+                        Color(red: 0.80, green: 0.06, blue: 0.08),
+                    ],
+                    startPoint: .top, endPoint: .bottom),
+                actionBackground: LinearGradient(
+                    colors: [
+                        Color(red: 0.95, green: 0.18, blue: 0.16),
+                        Color(red: 0.65, green: 0.02, blue: 0.05),
+                    ],
+                    startPoint: .topLeading, endPoint: .bottomTrailing),
+                isLight: false)
         default:
             return ThemePalette(
                 textPrimary: .white,
@@ -59,6 +86,7 @@ extension AppTheme {
                 cardBackground: Color.white.opacity(self == .dark ? 0.07 : 0.14),
                 barTrack: Color.white.opacity(0.15),
                 numberGradient: Theme.rainbow,
+                actionBackground: Theme.actionGradient,
                 isLight: false)
         }
     }
@@ -100,7 +128,7 @@ enum Theme {
     ]
 }
 
-/// 主题选择与自定义背景照片的存取
+/// 主题选择与自定义背景照片（支持多张轮播）的存取
 enum ThemeStore {
     private static let themeKey = "appTheme"
 
@@ -109,31 +137,60 @@ enum ThemeStore {
         set { DeathClock.defaults.set(newValue.rawValue, forKey: themeKey) }
     }
 
-    private static var photoURL: URL? {
+    private static var container: URL? {
         FileManager.default
-            .containerURL(forSecurityApplicationGroupIdentifier: DeathClock.appGroupID)?
-            .appendingPathComponent("background.jpg")
+            .containerURL(forSecurityApplicationGroupIdentifier: DeathClock.appGroupID)
     }
 
-    static func savePhoto(_ data: Data) {
-        guard let url = photoURL, let image = UIImage(data: data) else { return }
-        // 控制尺寸避免每帧渲染大图
-        let maxSide: CGFloat = 1800
-        var final = image
+    private static var backgroundsDir: URL? {
+        guard let base = container else { return nil }
+        let dir = base.appendingPathComponent("backgrounds", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    /// 覆盖式保存整组背景照片（自动压缩到 1800px 内）
+    static func savePhotos(_ datas: [Data]) {
+        guard let dir = backgroundsDir else { return }
+        if let old = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) {
+            for f in old { try? FileManager.default.removeItem(at: f) }
+        }
+        for (i, data) in datas.enumerated() {
+            guard let image = UIImage(data: data) else { continue }
+            let resized = downscale(image, maxSide: 1800)
+            if let jpeg = resized.jpegData(compressionQuality: 0.85) {
+                try? jpeg.write(to: dir.appendingPathComponent(String(format: "bg-%02d.jpg", i)))
+            }
+        }
+    }
+
+    static func loadPhotos() -> [UIImage] {
+        guard let dir = backgroundsDir,
+              let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)
+        else { return legacyPhoto() }
+        let images = files
+            .filter { $0.pathExtension == "jpg" }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+            .compactMap { UIImage(contentsOfFile: $0.path) }
+        return images.isEmpty ? legacyPhoto() : images
+    }
+
+    static var photoCount: Int { loadPhotos().count }
+
+    /// 旧版单张背景的兼容读取
+    private static func legacyPhoto() -> [UIImage] {
+        guard let url = container?.appendingPathComponent("background.jpg"),
+              let data = try? Data(contentsOf: url),
+              let image = UIImage(data: data) else { return [] }
+        return [image]
+    }
+
+    private static func downscale(_ image: UIImage, maxSide: CGFloat) -> UIImage {
         let side = max(image.size.width, image.size.height)
-        if side > maxSide {
-            let scale = maxSide / side
-            let newSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
-            let renderer = UIGraphicsImageRenderer(size: newSize)
-            final = renderer.image { _ in image.draw(in: CGRect(origin: .zero, size: newSize)) }
-        }
-        if let jpeg = final.jpegData(compressionQuality: 0.85) {
-            try? jpeg.write(to: url)
-        }
-    }
-
-    static func loadPhoto() -> UIImage? {
-        guard let url = photoURL, let data = try? Data(contentsOf: url) else { return nil }
-        return UIImage(data: data)
+        guard side > maxSide else { return image }
+        let scale = maxSide / side
+        let newSize = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        return renderer.image { _ in image.draw(in: CGRect(origin: .zero, size: newSize)) }
     }
 }
