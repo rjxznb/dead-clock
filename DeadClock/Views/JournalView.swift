@@ -13,9 +13,9 @@ struct JournalView: View {
                         Image(systemName: "book.pages")
                             .font(.system(size: 52))
                             .foregroundStyle(.tertiary)
-                        Text("还没有记录")
+                        Text("journal.empty.title")
                             .font(.headline)
-                        Text("每天记下一件让你开心或有意义的事，\n它们会在这里慢慢积累成你的人生足迹。")
+                        Text("journal.empty.body")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -41,18 +41,19 @@ struct JournalView: View {
                             }
                             .onDelete(perform: delete)
                         } header: {
-                            Text("🔥 连续 \(JournalStore.streak) 天 · 共 \(entries.count) 个美好瞬间")
+                            Text(String(format: NSLocalizedString("streak.line", comment: ""),
+                                        JournalStore.streak, entries.count))
                         } footer: {
-                            Text("点击任意一条记录可生成分享海报")
+                            Text("journal.footer")
                         }
                     }
                 }
             }
-            .navigationTitle("足迹")
+            .navigationTitle(Text("journal.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") { dismiss() }
+                    Button("settings.done") { dismiss() }
                 }
             }
         }
@@ -63,12 +64,9 @@ struct JournalView: View {
 
     private func dateLabel(for entry: JournalEntry) -> String {
         guard let date = JournalStore.date(fromKey: entry.dateKey) else { return entry.dateKey }
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "zh_CN")
-        f.dateFormat = "M月d日 EEEE"
-        let label = f.string(from: date)
+        let label = date.formatted(.dateTime.month().day().weekday(.wide))
         if entry.dateKey == JournalStore.dateKey(for: Date()) {
-            return label + " · 今天"
+            return label + NSLocalizedString("journal.today.suffix", comment: "")
         }
         return label
     }

@@ -35,7 +35,7 @@ struct WatchWidgetView: View {
 
         switch family {
         case .accessoryInline:
-            Text("✨ 你还拥有 \(days) 天")
+            Text(String(format: NSLocalizedString("widget.inline", comment: ""), days))
                 .watchWidgetBackground()
 
         case .accessoryCircular:
@@ -51,16 +51,16 @@ struct WatchWidgetView: View {
             Text("\(days)")
                 .font(.headline)
                 .widgetLabel {
-                    Text("还拥有 · 天")
+                    Text("widget.corner.label")
                 }
                 .watchWidgetBackground()
 
         default: // .accessoryRectangular
             VStack(alignment: .leading, spacing: 2) {
-                Text("把握当下 · 你还拥有")
+                Text("widget.header")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
-                Text("\(days) 天")
+                Text(String(format: NSLocalizedString("widget.days.n", comment: ""), days))
                     .font(.headline)
                 if entry.date < deathDate {
                     Text(timerInterval: entry.date...deathDate, countsDown: true)
@@ -80,8 +80,8 @@ struct DeadClockWatchWidget: Widget {
         StaticConfiguration(kind: kind, provider: WatchProvider()) { entry in
             WatchWidgetView(entry: entry)
         }
-        .configurationDisplayName("时光倒计时")
-        .description("抬腕即见：把余生变成动力。")
+        .configurationDisplayName("widget.name")
+        .description("widget.desc")
         .supportedFamilies([
             .accessoryInline,
             .accessoryCircular,

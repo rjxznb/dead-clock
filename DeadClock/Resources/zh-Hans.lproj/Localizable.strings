@@ -1,0 +1,71 @@
+/* 主界面 */
+"headline.normal" = "把握当下 · 你还拥有";
+"headline.fear" = "距离死亡还剩";
+"unit.seconds.caption" = "秒";
+"unit.y" = "年";
+"unit.d" = "天";
+"unit.h" = "时";
+"unit.m" = "分";
+"unit.s" = "秒";
+"progress.normal" = "人生旅程已走过 %.6f%%";
+"progress.fear" = "人生已逝去 %.6f%%";
+"streak.line" = "🔥 已连续记录 %1$lld 天 · 共 %2$lld 个美好瞬间";
+"tab.journal" = "足迹";
+"tab.settings" = "设置";
+"checkin.button" = "记录今天";
+"checkin.done" = "今日已记录";
+
+/* 打卡弹层 */
+"checkin.title" = "✨ 记录今天";
+"checkin.placeholder" = "今天最让你开心或最有意义的一件事是什么？";
+"checkin.save" = "保存这个瞬间";
+"life.day.n" = "人生第 %@ 天";
+
+/* 设置 */
+"settings.title" = "设置";
+"settings.yourtime" = "你的时间";
+"settings.birthdate" = "出生日期";
+"settings.expectancy" = "预期寿命";
+"settings.age.format" = "%lld 岁";
+"settings.deathdate" = "旅程终点";
+"settings.appearance" = "外观";
+"settings.theme" = "主题";
+"settings.photo.pick" = "选择背景照片（可多选）";
+"settings.photo.change" = "更换背景照片（当前 %lld 张）";
+"settings.reminder.section" = "每日提醒";
+"settings.reminder.toggle" = "睡前提醒打卡";
+"settings.reminder.time" = "提醒时间";
+"settings.reminder.footer" = "到点提醒你记录今天最开心或最有意义的一件事；当天已打卡的话不会打扰你。时间有限，去做让你快乐和有意义的事。";
+"settings.done" = "完成";
+"settings.alert.title" = "通知权限未开启";
+"settings.alert.ok" = "好";
+"settings.alert.body" = "请到 系统设置 → 通知 → OneLife 里允许通知，然后再打开这个开关。";
+
+/* 主题 */
+"theme.dark" = "深色";
+"theme.light" = "浅色";
+"theme.gradient" = "流动渐变";
+"theme.photo" = "照片轮播";
+"theme.red" = "醒目红";
+
+/* 足迹 */
+"journal.title" = "足迹";
+"journal.empty.title" = "还没有记录";
+"journal.empty.body" = "每天记下一件让你开心或有意义的事，\n它们会在这里慢慢积累成你的人生足迹。";
+"journal.footer" = "点击任意一条记录可生成分享海报";
+"journal.today.suffix" = " · 今天";
+
+/* 海报 */
+"poster.style.picker" = "样式";
+"poster.style.gradient" = "渐变";
+"poster.style.dark" = "黑底";
+"poster.quote.format" = "「%@」";
+"poster.moment.n" = "第 %lld 个美好瞬间";
+"poster.brand" = "OneLife ⏳ 把握当下";
+"poster.share" = "分享海报";
+"poster.title" = "分享海报";
+"poster.preview" = "OneLife · 美好瞬间";
+
+/* 提醒通知 */
+"reminder.title" = "✨ 记录今天";
+"reminder.body" = "今天最让你开心或最有意义的一件事是什么？睡前花 30 秒记下来。";

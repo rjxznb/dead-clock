@@ -4,7 +4,7 @@ options:
   deploymentTarget:
     iOS: "16.0"
     watchOS: "9.0"
-  developmentLanguage: zh-Hans
+  developmentLanguage: en
   xcodeVersion: "16.0"
   createIntermediateGroups: true
   generateEmptyDirectories: true

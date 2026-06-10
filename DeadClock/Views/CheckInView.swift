@@ -12,7 +12,7 @@ struct CheckInView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("✨ 记录今天")
+            Text("checkin.title")
                 .font(.title3.bold())
             Text(dateLine)
                 .font(.caption)
@@ -26,7 +26,7 @@ struct CheckInView: View {
                 .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
                 .overlay(alignment: .topLeading) {
                     if text.isEmpty {
-                        Text("今天最让你开心或最有意义的一件事是什么？")
+                        Text("checkin.placeholder")
                             .font(.subheadline)
                             .foregroundStyle(.tertiary)
                             .padding(20)
@@ -37,7 +37,7 @@ struct CheckInView: View {
             Button {
                 save()
             } label: {
-                Text("保存这个瞬间")
+                Text("checkin.save")
                     .font(.headline)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -54,11 +54,10 @@ struct CheckInView: View {
     }
 
     private var dateLine: String {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "zh_CN")
-        f.dateFormat = "yyyy年M月d日 EEEE"
+        let dateStr = Date().formatted(.dateTime.year().month().day().weekday(.wide))
         let dayN = Int(Date().timeIntervalSince(DeathClock.birthDate) / 86400) + 1
-        return "\(f.string(from: Date())) · 人生第 \(dayN.formatted()) 天"
+        let dayStr = String(format: NSLocalizedString("life.day.n", comment: ""), dayN.formatted())
+        return "\(dateStr) · \(dayStr)"
     }
 
     private func save() {

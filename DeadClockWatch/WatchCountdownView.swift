@@ -19,7 +19,7 @@ struct WatchCountdownView: View {
             let progress = DeathClock.lifeProgress(at: now)
 
             VStack(spacing: 5) {
-                Text("把握当下 · 你还拥有")
+                Text("watch.header")
                     .font(.system(size: 11))
                     .foregroundStyle(.gray)
 
@@ -29,7 +29,7 @@ struct WatchCountdownView: View {
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
 
-                Text("天")
+                Text("watch.day.unit")
                     .font(.system(size: 11))
                     .foregroundStyle(.gray)
 

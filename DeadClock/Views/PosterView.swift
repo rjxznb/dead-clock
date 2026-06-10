@@ -6,8 +6,8 @@ enum PosterStyle: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .gradient: return "渐变"
-        case .dark: return "黑底"
+        case .gradient: return String(localized: "poster.style.gradient")
+        case .dark: return String(localized: "poster.style.dark")
         }
     }
 }
@@ -23,7 +23,7 @@ struct PosterCard: View {
                 .font(.footnote)
                 .opacity(0.85)
 
-            Text("「\(entry.text)」")
+            Text(String(format: NSLocalizedString("poster.quote.format", comment: ""), entry.text))
                 .font(.title3.weight(.bold))
                 .lineSpacing(8)
                 .foregroundStyle(style == .dark ? AnyShapeStyle(Theme.rainbow) : AnyShapeStyle(.white))
@@ -33,16 +33,16 @@ struct PosterCard: View {
                 .frame(height: 1)
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("人生第 \(dayNumber.formatted()) 天")
+                Text(String(format: NSLocalizedString("life.day.n", comment: ""), dayNumber.formatted()))
                     .font(.subheadline.weight(.semibold))
-                Text("第 \(momentIndex) 个美好瞬间")
+                Text(String(format: NSLocalizedString("poster.moment.n", comment: ""), momentIndex))
                     .font(.footnote)
                     .opacity(0.85)
             }
 
             HStack {
                 Spacer()
-                Text("OneLife ⏳ 把握当下")
+                Text("poster.brand")
                     .font(.caption2)
                     .opacity(0.65)
             }
@@ -60,10 +60,7 @@ struct PosterCard: View {
 
     private var dateString: String {
         guard let date = JournalStore.date(fromKey: entry.dateKey) else { return entry.dateKey }
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "zh_CN")
-        f.dateFormat = "yyyy年M月d日 · EEEE"
-        return f.string(from: date)
+        return date.formatted(.dateTime.year().month().day().weekday(.wide))
     }
 
     private var dayNumber: Int {
@@ -86,7 +83,7 @@ struct PosterSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
-                Picker("样式", selection: $style) {
+                Picker("poster.style.picker", selection: $style) {
                     ForEach(PosterStyle.allCases) { s in
                         Text(s.label).tag(s)
                     }
@@ -100,9 +97,9 @@ struct PosterSheet: View {
                 if let rendered {
                     ShareLink(
                         item: rendered,
-                        preview: SharePreview("OneLife · 美好瞬间", image: rendered)
+                        preview: SharePreview(String(localized: "poster.preview"), image: rendered)
                     ) {
-                        Label("分享海报", systemImage: "square.and.arrow.up")
+                        Label("poster.share", systemImage: "square.and.arrow.up")
                             .font(.headline)
                             .foregroundStyle(.white)
                             .padding(.horizontal, 36)
@@ -113,11 +110,11 @@ struct PosterSheet: View {
                 Spacer()
             }
             .padding(.top, 20)
-            .navigationTitle("分享海报")
+            .navigationTitle(Text("poster.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") { dismiss() }
+                    Button("settings.done") { dismiss() }
                 }
             }
         }

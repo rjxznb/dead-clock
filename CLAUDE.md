@@ -1,31 +1,35 @@
 # CLAUDE.md
 
-OneLife（死亡倒计时 App）。Windows 开发，无本地 Xcode，一切构建签名走 GitHub Actions。
+OneLife — a life-countdown iOS/watchOS app. Developed on Windows with no local Xcode; all builds, signing, and uploads run on GitHub Actions.
 
-## 关键值
+## Key values
 
-- Repo：`rjxznb/dead-clock`（public，免费 macOS Actions）
-- Bundle ID：`com.rjxznb.deadclock`（+ `.widget` / `.watchkitapp` / `.watchkitapp.widget`）
-- App Group：`group.com.rjxznb.deadclock`（所有 target 共享数据）
-- Team ID：`Q3BK52FQT9`；ASC App ID：6778642991
-- TestFlight 构建号 = GitHub run_number + 100
+- Repo: `rjxznb/dead-clock` (public — free macOS Actions minutes)
+- Bundle IDs: `com.rjxznb.deadclock` (+ `.widget` / `.watchkitapp` / `.watchkitapp.widget`)
+- App Group: `group.com.rjxznb.deadclock` (shared data across all targets)
+- Team ID: `Q3BK52FQT9` · ASC App ID: 6778642991
+- TestFlight build number = GitHub run_number + 100
 
-## 工作方式
+## Workflow
 
-- 改完代码 `git push` 即发布：CI（~4min 模拟器+截图 artifact）、TestFlight（~10min，仅 main）
-- 验证 UI：下载 CI 的 screenshots artifact 查看
-- `xcodegen` 由 CI 执行，本地不需要；`.xcodeproj` 不入库，工程结构全在 `project.yml`
+- `git push` is the release flow: CI (~4 min, simulator build + screenshot artifact) and TestFlight (~10 min, main branch only)
+- Verify UI changes by downloading the CI screenshots artifact
+- `xcodegen` runs in CI; `.xcodeproj` is not committed — the project structure lives entirely in `project.yml`
+- Docs-only commits should use `[skip ci]`
 
-## 产品基调
+## Product tone
 
-定位是**正向激励**（珍惜时间、记录美好），默认文案和配色避免恐怖感；"醒目红"主题（`AppTheme.red / isFearMode`）是唯一允许恐惧措辞的地方。
+The app is **positive motivation** (cherish time, record good moments). Default copy and colors must avoid morbid framing; the "Alert red" theme (`AppTheme.red` / `isFearMode`) is the only place fear-based wording is allowed.
 
-## 踩过的坑（勿重蹈）
+## Localization
 
-- `.p8` 推 GitHub Secret 必须用 bash `<` 重定向；PowerShell 管道会损坏编码（CryptoKit invalidPEMDocument）
-- 竖屏-only 必须 `UIRequiresFullScreen: true`，否则 ITMS-90474 拒收
-- ITMS 错误在 altool 上传成功**之后**经邮件异步到达；altool 日志中的临时 `ERROR:`（如 HTTP 500 重试）不代表失败，以 `UPLOAD SUCCEEDED` 为准
-- 新增 target 的 Bundle ID 需在开发者后台手动注册并关联 App Group，云签名自动注册不可靠（报误导性的 bearer token 错误）
-- 用户网络到 GitHub 偶发 SSL 中断：git push / gh api 一律带重试
-- 图标必须 1024×1024 RGB 无 alpha
-- 纯文档提交用 `[skip ci]` 避免浪费构建
+Standard `.strings` localization (en is the development language, zh-Hans provided). Every user-facing string goes through `Localizable.strings` in its target's `en.lproj` / `zh-Hans.lproj`; never hardcode UI text. Dates use locale-aware `formatted()`, not fixed-locale DateFormatter.
+
+## Hard-won gotchas (do not repeat)
+
+- Pushing the `.p8` to GitHub Secrets must use bash `<` redirection; PowerShell pipes corrupt the encoding (CryptoKit invalidPEMDocument)
+- Portrait-only apps need `UIRequiresFullScreen: true`, or Apple rejects with ITMS-90474
+- ITMS errors arrive by email **after** a successful altool upload; transient `ERROR:` lines (e.g. retried HTTP 500s) in altool logs are not failures — trust the `UPLOAD SUCCEEDED` marker
+- New targets' bundle IDs must be registered manually in the developer portal (with App Group attached); cloud-signing auto-registration is unreliable (misleading "bearer token" errors)
+- This network drops GitHub SSL connections intermittently: always retry `git push` / `gh api`
+- App icons must be 1024×1024 RGB with no alpha channel

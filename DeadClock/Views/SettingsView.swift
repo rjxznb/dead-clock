@@ -23,28 +23,29 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("你的时间") {
-                    DatePicker("出生日期",
+                Section("settings.yourtime") {
+                    DatePicker("settings.birthdate",
                                selection: $birthDate,
                                in: ...Date(),
                                displayedComponents: .date)
 
                     Stepper(value: $lifeExpectancy, in: 40...120, step: 1) {
                         HStack {
-                            Text("预期寿命")
+                            Text("settings.expectancy")
                             Spacer()
-                            Text("\(Int(lifeExpectancy)) 岁")
+                            Text(String(format: NSLocalizedString("settings.age.format", comment: ""),
+                                        Int(lifeExpectancy)))
                                 .foregroundStyle(.secondary)
                         }
                     }
 
-                    LabeledContent("旅程终点") {
+                    LabeledContent("settings.deathdate") {
                         Text(deathDateString)
                     }
                 }
 
-                Section("外观") {
-                    Picker("主题", selection: $theme) {
+                Section("settings.appearance") {
+                    Picker("settings.theme", selection: $theme) {
                         ForEach(AppTheme.allCases) { t in
                             Text(t.label).tag(t)
                         }
@@ -54,30 +55,32 @@ struct SettingsView: View {
                         PhotosPicker(selection: $photoItems,
                                      maxSelectionCount: 9,
                                      matching: .images) {
-                            Label(photoCount > 0 ? "更换背景照片（当前 \(photoCount) 张）" : "选择背景照片（可多选）",
+                            Label(photoCount > 0
+                                    ? String(format: NSLocalizedString("settings.photo.change", comment: ""), photoCount)
+                                    : String(localized: "settings.photo.pick"),
                                   systemImage: "photo.on.rectangle.angled")
                         }
                     }
                 }
 
                 Section {
-                    Toggle("睡前提醒打卡", isOn: $reminderOn)
+                    Toggle("settings.reminder.toggle", isOn: $reminderOn)
                     if reminderOn {
-                        DatePicker("提醒时间",
+                        DatePicker("settings.reminder.time",
                                    selection: $reminderTime,
                                    displayedComponents: .hourAndMinute)
                     }
                 } header: {
-                    Text("每日提醒")
+                    Text("settings.reminder.section")
                 } footer: {
-                    Text("到点提醒你记录今天最开心或最有意义的一件事；当天已打卡的话不会打扰你。时间有限，去做让你快乐和有意义的事。")
+                    Text("settings.reminder.footer")
                 }
             }
-            .navigationTitle("设置")
+            .navigationTitle(Text("settings.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") {
+                    Button("settings.done") {
                         save()
                         dismiss()
                     }
@@ -110,10 +113,10 @@ struct SettingsView: View {
                     ReminderManager.disable()
                 }
             }
-            .alert("通知权限未开启", isPresented: $showDeniedAlert) {
-                Button("好") {}
+            .alert("settings.alert.title", isPresented: $showDeniedAlert) {
+                Button("settings.alert.ok") {}
             } message: {
-                Text("请到 系统设置 → 通知 → OneLife 里允许通知，然后再打开这个开关。")
+                Text("settings.alert.body")
             }
         }
         .preferredColorScheme(theme.palette.isLight ? .light : .dark)
@@ -135,7 +138,7 @@ struct SettingsView: View {
             ReminderManager.reschedule()
         }
         WidgetCenter.shared.reloadAllTimelines()
-        PhoneSync.push()   // 同步到 Apple Watch
+        PhoneSync.push()   // sync to Apple Watch
     }
 }
 

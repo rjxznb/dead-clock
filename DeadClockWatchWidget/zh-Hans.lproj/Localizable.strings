@@ -1,0 +1,6 @@
+"widget.inline" = "✨ 你还拥有 %lld 天";
+"widget.header" = "把握当下 · 你还拥有";
+"widget.days.n" = "%lld 天";
+"widget.corner.label" = "还拥有 · 天";
+"widget.name" = "时光倒计时";
+"widget.desc" = "抬腕即见：把余生变成动力。";

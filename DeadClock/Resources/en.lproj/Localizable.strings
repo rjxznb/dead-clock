@@ -1,0 +1,71 @@
+/* Main screen */
+"headline.normal" = "Seize the day · You still have";
+"headline.fear" = "Time left before death";
+"unit.seconds.caption" = "seconds";
+"unit.y" = "yrs";
+"unit.d" = "days";
+"unit.h" = "hrs";
+"unit.m" = "min";
+"unit.s" = "sec";
+"progress.normal" = "%.6f%% of the journey lived";
+"progress.fear" = "%.6f%% of life gone";
+"streak.line" = "🔥 %1$lld-day streak · %2$lld beautiful moments";
+"tab.journal" = "Journal";
+"tab.settings" = "Settings";
+"checkin.button" = "Record today";
+"checkin.done" = "Recorded today";
+
+/* Check-in sheet */
+"checkin.title" = "✨ Record today";
+"checkin.placeholder" = "What made you happiest or felt most meaningful today?";
+"checkin.save" = "Save this moment";
+"life.day.n" = "Day %@ of your life";
+
+/* Settings */
+"settings.title" = "Settings";
+"settings.yourtime" = "Your Time";
+"settings.birthdate" = "Date of birth";
+"settings.expectancy" = "Life expectancy";
+"settings.age.format" = "%lld yrs";
+"settings.deathdate" = "End of journey";
+"settings.appearance" = "Appearance";
+"settings.theme" = "Theme";
+"settings.photo.pick" = "Choose background photos (multi-select)";
+"settings.photo.change" = "Change background photos (%lld selected)";
+"settings.reminder.section" = "Daily Reminder";
+"settings.reminder.toggle" = "Bedtime check-in reminder";
+"settings.reminder.time" = "Reminder time";
+"settings.reminder.footer" = "We'll nudge you to record the happiest or most meaningful thing of your day; if you've already checked in, we stay quiet. Time is limited — spend it on what makes you happy and matters.";
+"settings.done" = "Done";
+"settings.alert.title" = "Notifications not allowed";
+"settings.alert.ok" = "OK";
+"settings.alert.body" = "Please allow notifications in Settings → Notifications → OneLife, then turn this on again.";
+
+/* Themes */
+"theme.dark" = "Dark";
+"theme.light" = "Light";
+"theme.gradient" = "Flowing gradient";
+"theme.photo" = "Photo slideshow";
+"theme.red" = "Alert red";
+
+/* Journal */
+"journal.title" = "Journal";
+"journal.empty.title" = "No records yet";
+"journal.empty.body" = "Record one happy or meaningful thing each day —\nthey will grow into the footprints of your life.";
+"journal.footer" = "Tap any record to create a shareable poster";
+"journal.today.suffix" = " · Today";
+
+/* Poster */
+"poster.style.picker" = "Style";
+"poster.style.gradient" = "Gradient";
+"poster.style.dark" = "Dark";
+"poster.quote.format" = "“%@”";
+"poster.moment.n" = "Beautiful moment #%lld";
+"poster.brand" = "OneLife ⏳ Seize the day";
+"poster.share" = "Share poster";
+"poster.title" = "Share Poster";
+"poster.preview" = "OneLife · Beautiful moment";
+
+/* Reminder notification */
+"reminder.title" = "✨ Record today";
+"reminder.body" = "What made you happiest or felt most meaningful today? Take 30 seconds before bed to write it down.";

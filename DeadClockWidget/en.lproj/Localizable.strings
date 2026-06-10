@@ -1,0 +1,6 @@
+"widget.inline" = "✨ %lld days left for you";
+"widget.header" = "Seize the day · You still have";
+"widget.days.n" = "%lld days";
+"widget.day.unit" = "days";
+"widget.name" = "Time Countdown";
+"widget.desc" = "Turn the rest of your life into motivation.";

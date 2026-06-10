@@ -48,7 +48,7 @@ struct DeadClockWidgetView: View {
 
         switch family {
         case .accessoryInline:
-            Text("✨ 你还拥有 \(days) 天")
+            Text(String(format: NSLocalizedString("widget.inline", comment: ""), days))
                 .widgetBackground(Color.clear)
 
         case .accessoryCircular:
@@ -62,10 +62,10 @@ struct DeadClockWidgetView: View {
 
         case .accessoryRectangular:
             VStack(alignment: .leading, spacing: 2) {
-                Text("把握当下 · 你还拥有")
+                Text("widget.header")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
-                Text("\(days) 天")
+                Text(String(format: NSLocalizedString("widget.days.n", comment: ""), days))
                     .font(.headline)
                 if entry.date < deathDate {
                     Text(timerInterval: entry.date...deathDate, countsDown: true)
@@ -77,7 +77,7 @@ struct DeadClockWidgetView: View {
 
         default:
             VStack(spacing: 8) {
-                Text("把握当下 · 你还拥有")
+                Text("widget.header")
                     .font(.caption)
                     .foregroundStyle(.gray)
                 Text("\(days)")
@@ -86,7 +86,7 @@ struct DeadClockWidgetView: View {
                     .foregroundStyle(widgetRainbow)
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
-                Text("天")
+                Text("widget.day.unit")
                     .font(.caption2)
                     .foregroundStyle(.gray)
                 if entry.date < deathDate {
@@ -109,8 +109,8 @@ struct DeadClockWidget: Widget {
         StaticConfiguration(kind: kind, provider: DeathProvider()) { entry in
             DeadClockWidgetView(entry: entry)
         }
-        .configurationDisplayName("时光倒计时")
-        .description("把余生变成动力，珍惜每一天。")
+        .configurationDisplayName("widget.name")
+        .description("widget.desc")
         .supportedFamilies([
             .systemSmall,
             .systemMedium,

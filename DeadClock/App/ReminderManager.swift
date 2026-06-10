@@ -64,8 +64,8 @@ enum ReminderManager {
                 if fireDate <= Date() { continue }
             }
             let content = UNMutableNotificationContent()
-            content.title = "✨ 记录今天"
-            content.body = "今天最让你开心或最有意义的一件事是什么？睡前花 30 秒记下来。"
+            content.title = NSLocalizedString("reminder.title", comment: "")
+            content.body = NSLocalizedString("reminder.body", comment: "")
             content.sound = .default
             let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
             let request = UNNotificationRequest(

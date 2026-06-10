@@ -104,7 +104,7 @@ struct CountdownView: View {
         return VStack(spacing: 26) {
             Spacer()
 
-            Text(theme.isFearMode ? "距离死亡还剩" : "把握当下 · 你还拥有")
+            Text(theme.isFearMode ? String(localized: "headline.fear") : String(localized: "headline.normal"))
                 .font(.subheadline)
                 .foregroundStyle(palette.textSecondary)
                 .tracking(6)
@@ -116,17 +116,17 @@ struct CountdownView: View {
                     .minimumScaleFactor(0.4)
                     .lineLimit(1)
                     .padding(.horizontal)
-                Text("秒")
+                Text("unit.seconds.caption")
                     .font(.footnote)
                     .foregroundStyle(palette.textSecondary)
             }
 
             HStack(spacing: 10) {
-                unitBlock(value: b.years, unit: "年", palette: palette)
-                unitBlock(value: b.days, unit: "天", palette: palette)
-                unitBlock(value: b.hours, unit: "时", palette: palette)
-                unitBlock(value: b.minutes, unit: "分", palette: palette)
-                unitBlock(value: b.seconds, unit: "秒", palette: palette)
+                unitBlock(value: b.years, unit: String(localized: "unit.y"), palette: palette)
+                unitBlock(value: b.days, unit: String(localized: "unit.d"), palette: palette)
+                unitBlock(value: b.hours, unit: String(localized: "unit.h"), palette: palette)
+                unitBlock(value: b.minutes, unit: String(localized: "unit.m"), palette: palette)
+                unitBlock(value: b.seconds, unit: String(localized: "unit.s"), palette: palette)
             }
             .padding(.horizontal)
 
@@ -141,7 +141,8 @@ struct CountdownView: View {
                 }
                 .frame(height: 8)
 
-                Text(String(format: theme.isFearMode ? "人生已逝去 %.6f%%" : "人生旅程已走过 %.6f%%",
+                Text(String(format: NSLocalizedString(theme.isFearMode ? "progress.fear" : "progress.normal",
+                                                      comment: ""),
                             progress * 100))
                     .font(.system(.footnote, design: .monospaced))
                     .foregroundStyle(palette.textSecondary)
@@ -149,7 +150,7 @@ struct CountdownView: View {
             .padding(.horizontal, 32)
 
             if totalMoments > 0 {
-                Text("🔥 已连续记录 \(streak) 天 · 共 \(totalMoments) 个美好瞬间")
+                Text(String(format: NSLocalizedString("streak.line", comment: ""), streak, totalMoments))
                     .font(.caption)
                     .foregroundStyle(palette.accent)
             }
@@ -157,14 +158,14 @@ struct CountdownView: View {
             Spacer()
 
             HStack(spacing: 14) {
-                sideButton(icon: "book.pages", label: "足迹", palette: palette) {
+                sideButton(icon: "book.pages", label: String(localized: "tab.journal"), palette: palette) {
                     showJournal = true
                 }
 
                 Button {
                     showCheckIn = true
                 } label: {
-                    Label(checkedToday ? "今日已记录" : "记录今天",
+                    Label(checkedToday ? String(localized: "checkin.done") : String(localized: "checkin.button"),
                           systemImage: checkedToday ? "checkmark.seal.fill" : "sparkles")
                         .font(.headline)
                         .foregroundStyle(.white)
@@ -173,7 +174,7 @@ struct CountdownView: View {
                         .background(palette.actionBackground, in: Capsule())
                 }
 
-                sideButton(icon: "gearshape", label: "设置", palette: palette) {
+                sideButton(icon: "gearshape", label: String(localized: "tab.settings"), palette: palette) {
                     showSettings = true
                 }
             }

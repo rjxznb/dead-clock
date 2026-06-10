@@ -12,11 +12,11 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .dark: return "深色"
-        case .light: return "浅色"
-        case .gradient: return "流动渐变"
-        case .photo: return "照片轮播"
-        case .red: return "醒目红"
+        case .dark: return String(localized: "theme.dark")
+        case .light: return String(localized: "theme.light")
+        case .gradient: return String(localized: "theme.gradient")
+        case .photo: return String(localized: "theme.photo")
+        case .red: return String(localized: "theme.red")
         }
     }
 
