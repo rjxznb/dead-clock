@@ -26,6 +26,17 @@ struct DeathProvider: TimelineProvider {
     }
 }
 
+private let widgetRainbow = LinearGradient(
+    colors: [
+        Color(red: 1.00, green: 0.42, blue: 0.62),
+        Color(red: 1.00, green: 0.62, blue: 0.26),
+        Color(red: 1.00, green: 0.79, blue: 0.34),
+        Color(red: 0.18, green: 0.80, blue: 0.44),
+        Color(red: 0.00, green: 0.82, blue: 0.83),
+        Color(red: 0.65, green: 0.37, blue: 0.92),
+    ],
+    startPoint: .leading, endPoint: .trailing)
+
 struct DeadClockWidgetView: View {
     @Environment(\.widgetFamily) private var family
     var entry: DeathEntry
@@ -37,12 +48,12 @@ struct DeadClockWidgetView: View {
 
         switch family {
         case .accessoryInline:
-            Text("余生 \(days) 天")
+            Text("✨ 你还拥有 \(days) 天")
                 .widgetBackground(Color.clear)
 
         case .accessoryCircular:
-            Gauge(value: progress) {
-                Image(systemName: "hourglass")
+            Gauge(value: 1 - progress) {
+                Image(systemName: "sparkles")
             } currentValueLabel: {
                 Text("\(Int((1 - progress) * 100))%")
             }
@@ -51,7 +62,7 @@ struct DeadClockWidgetView: View {
 
         case .accessoryRectangular:
             VStack(alignment: .leading, spacing: 2) {
-                Text("距离死亡")
+                Text("把握当下 · 你还拥有")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                 Text("\(days) 天")
@@ -66,13 +77,13 @@ struct DeadClockWidgetView: View {
 
         default:
             VStack(spacing: 8) {
-                Text("距离死亡还剩")
+                Text("把握当下 · 你还拥有")
                     .font(.caption)
                     .foregroundStyle(.gray)
                 Text("\(days)")
                     .font(.system(size: family == .systemMedium ? 56 : 40,
                                   weight: .heavy, design: .monospaced))
-                    .foregroundStyle(.red)
+                    .foregroundStyle(widgetRainbow)
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
                 Text("天")
@@ -98,8 +109,8 @@ struct DeadClockWidget: Widget {
         StaticConfiguration(kind: kind, provider: DeathProvider()) { entry in
             DeadClockWidgetView(entry: entry)
         }
-        .configurationDisplayName("死亡倒计时")
-        .description("时刻提醒你：余生有限。")
+        .configurationDisplayName("时光倒计时")
+        .description("把余生变成动力，珍惜每一天。")
         .supportedFamilies([
             .systemSmall,
             .systemMedium,

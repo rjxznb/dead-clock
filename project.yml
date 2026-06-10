@@ -52,7 +52,7 @@ targets:
     info:
       path: DeadClock/Info.plist
       properties:
-        CFBundleDisplayName: DeadClock
+        CFBundleDisplayName: OneLife
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen:
@@ -84,6 +84,6 @@ targets:
     info:
       path: DeadClockWidget/Info.plist
       properties:
-        CFBundleDisplayName: DeadClock
+        CFBundleDisplayName: OneLife
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
