@@ -101,6 +101,14 @@ struct SettingsView: View {
                     }
                 }
             }
+            .onChange(of: reminderTime) { newTime in
+                // 改完时间立即生效，不依赖“完成”按钮
+                guard reminderOn else { return }
+                let comps = Calendar.current.dateComponents([.hour, .minute], from: newTime)
+                ReminderManager.hour = comps.hour ?? 22
+                ReminderManager.minute = comps.minute ?? 0
+                ReminderManager.reschedule()
+            }
             .onChange(of: reminderOn) { on in
                 if on {
                     ReminderManager.requestAuthorizationAndEnable { granted in

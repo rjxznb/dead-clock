@@ -20,6 +20,15 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         NotificationCenter.default.post(name: .openCheckIn, object: nil)
         completionHandler()
     }
+
+    // App 在前台时 iOS 默认不显示通知横幅；显式声明前台也要展示
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound])
+    }
 }
 
 extension Notification.Name {
