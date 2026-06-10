@@ -7,8 +7,8 @@ final class MotionParallax: ObservableObject {
     private let manager = CMMotionManager()
     @Published var offset: CGSize = .zero
 
-    /// 背景最大平移量（点）；配合 1.08 倍放大保证边缘不露底
-    private let maxShift: CGFloat = 18
+    /// 背景最大平移量（点）；配合 1.15 倍放大保证边缘不露底
+    private let maxShift: CGFloat = 40
     /// 手持手机的典型俯仰角基线（弧度）
     private let pitchBaseline = 0.7
 
@@ -19,12 +19,12 @@ final class MotionParallax: ObservableObject {
         manager.deviceMotionUpdateInterval = 1.0 / 30.0
         manager.startDeviceMotionUpdates(to: .main) { [weak self] motion, _ in
             guard let self, let m = motion else { return }
-            let x = CGFloat(max(-0.5, min(0.5, m.attitude.roll / 2.0))) * 2 * self.maxShift
-            let y = CGFloat(max(-0.5, min(0.5, (m.attitude.pitch - self.pitchBaseline) / 2.0))) * 2 * self.maxShift
+            let x = CGFloat(max(-0.5, min(0.5, m.attitude.roll / 1.2))) * 2 * self.maxShift
+            let y = CGFloat(max(-0.5, min(0.5, (m.attitude.pitch - self.pitchBaseline) / 1.2))) * 2 * self.maxShift
             // 低通滤波让移动顺滑
             self.offset = CGSize(
-                width: self.offset.width * 0.85 + x * 0.15,
-                height: self.offset.height * 0.85 + y * 0.15)
+                width: self.offset.width * 0.75 + x * 0.25,
+                height: self.offset.height * 0.75 + y * 0.25)
         }
     }
 

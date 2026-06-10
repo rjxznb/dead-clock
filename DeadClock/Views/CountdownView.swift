@@ -99,7 +99,7 @@ struct CountdownView: View {
                         }
                     }
                     // 陀螺仪视差：放大一点再随姿态平移，边缘不露底
-                    .scaleEffect(1.08)
+                    .scaleEffect(1.15)
                     .offset(parallax.offset)
                     .overlay(Color.black.opacity(0.45))
                 }
