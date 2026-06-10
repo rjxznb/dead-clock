@@ -1,10 +1,21 @@
 import SwiftUI
 
 struct JournalView: View {
+    enum ActiveSheet: Identifiable {
+        case poster(JournalEntry)
+        case summary(SummaryPeriod)
+
+        var id: String {
+            switch self {
+            case .poster(let entry): return "poster-\(entry.dateKey)"
+            case .summary(let period): return "summary-\(period.rawValue)"
+            }
+        }
+    }
+
     @Environment(\.dismiss) private var dismiss
     @State private var entries = JournalStore.load()
-    @State private var selected: JournalEntry?
-    @State private var summaryPeriod: SummaryPeriod?
+    @State private var activeSheet: ActiveSheet?
 
     var body: some View {
         NavigationStack {
@@ -26,7 +37,7 @@ struct JournalView: View {
                         Section {
                             ForEach(entries) { entry in
                                 Button {
-                                    selected = entry
+                                    activeSheet = .poster(entry)
                                 } label: {
                                     VStack(alignment: .leading, spacing: 6) {
                                         Text(dateLabel(for: entry))
@@ -57,7 +68,7 @@ struct JournalView: View {
                     Menu {
                         ForEach(SummaryPeriod.allCases) { period in
                             Button {
-                                summaryPeriod = period
+                                activeSheet = .summary(period)
                             } label: {
                                 Text(period.titleKey)
                             }
@@ -72,11 +83,13 @@ struct JournalView: View {
                 }
             }
         }
-        .sheet(item: $selected) { entry in
-            PosterSheet(entry: entry)
-        }
-        .sheet(item: $summaryPeriod) { period in
-            SummaryPosterSheet(period: period)
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .poster(let entry):
+                PosterSheet(entry: entry)
+            case .summary(let period):
+                SummaryPosterSheet(period: period)
+            }
         }
     }
 
