@@ -70,7 +70,7 @@ struct JournalView: View {
                             Button {
                                 activeSheet = .summary(period)
                             } label: {
-                                Text(period.titleKey)
+                                Text(period.title)
                             }
                         }
                     } label: {

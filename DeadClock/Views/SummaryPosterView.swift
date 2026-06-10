@@ -7,7 +7,13 @@ enum SummaryPeriod: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var titleKey: LocalizedStringKey { LocalizedStringKey("summary.\(rawValue)") }
+    var title: String {
+        switch self {
+        case .week: return String(localized: "summary.week")
+        case .month: return String(localized: "summary.month")
+        case .year: return String(localized: "summary.year")
+        }
+    }
 
     var maxExcerpts: Int {
         switch self {
@@ -195,7 +201,7 @@ struct SummaryPosterSheet: View {
                 }
                 .padding(.vertical, 20)
             }
-            .navigationTitle(Text(period.titleKey))
+            .navigationTitle(period.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
