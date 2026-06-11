@@ -83,7 +83,7 @@ struct SummaryStats {
 
 struct SummaryPosterCard: View {
     let stats: SummaryStats
-    let style: PosterStyle
+    let background: PosterBackground
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -93,7 +93,7 @@ struct SummaryPosterCard: View {
                     .opacity(0.85)
                 Text("summary.card.title")
                     .font(.title2.weight(.heavy))
-                    .foregroundStyle(style == .dark ? AnyShapeStyle(Theme.rainbow) : AnyShapeStyle(.white))
+                    .foregroundStyle(background.isDark ? AnyShapeStyle(Theme.rainbow) : AnyShapeStyle(.white))
             }
 
             if stats.entries.isEmpty {
@@ -104,7 +104,7 @@ struct SummaryPosterCard: View {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text("\(stats.entries.count)")
                         .font(.system(size: 46, weight: .heavy, design: .monospaced))
-                        .foregroundStyle(style == .dark ? AnyShapeStyle(Theme.rainbow) : AnyShapeStyle(.white))
+                        .foregroundStyle(background.isDark ? AnyShapeStyle(Theme.rainbow) : AnyShapeStyle(.white))
                     Text("summary.moments.unit")
                         .font(.subheadline)
                         .opacity(0.9)
@@ -116,7 +116,7 @@ struct SummaryPosterCard: View {
                     .opacity(0.8)
 
                 Rectangle()
-                    .fill(.white.opacity(style == .dark ? 0.15 : 0.3))
+                    .fill(.white.opacity(background.isDark ? 0.15 : 0.3))
                     .frame(height: 1)
 
                 VStack(alignment: .leading, spacing: 10) {
@@ -144,11 +144,7 @@ struct SummaryPosterCard: View {
         .foregroundStyle(.white)
         .padding(30)
         .frame(width: 330, alignment: .leading)
-        .background(
-            style == .gradient
-                ? AnyShapeStyle(Theme.posterBackground)
-                : AnyShapeStyle(Color(red: 0.05, green: 0.05, blue: 0.07))
-        )
+        .background { PosterBackgroundFill(background: background) }
         .clipShape(RoundedRectangle(cornerRadius: 26))
     }
 
@@ -161,7 +157,7 @@ struct SummaryPosterCard: View {
 struct SummaryPosterSheet: View {
     let period: SummaryPeriod
     @Environment(\.dismiss) private var dismiss
-    @State private var style: PosterStyle = .gradient
+    @State private var background: PosterBackground = .gradient
     @State private var rendered: Image?
     @State private var renderedUI: UIImage?
     @State private var saved = false
@@ -175,16 +171,10 @@ struct SummaryPosterSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 24) {
-                    Picker("poster.style.picker", selection: $style) {
-                        ForEach(PosterStyle.allCases) { s in
-                            Text(s.label).tag(s)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, 40)
+                VStack(spacing: 20) {
+                    PosterSwatchRow(background: $background)
 
-                    SummaryPosterCard(stats: stats, style: style)
+                    SummaryPosterCard(stats: stats, background: background)
                         .shadow(color: .black.opacity(0.25), radius: 20, y: 10)
 
                     if let rendered, !stats.entries.isEmpty {
@@ -213,7 +203,7 @@ struct SummaryPosterSheet: View {
                         }
                     }
                 }
-                .padding(.vertical, 20)
+                .padding(.vertical, 16)
             }
             .navigationTitle(period.title)
             .navigationBarTitleDisplayMode(.inline)
@@ -223,12 +213,12 @@ struct SummaryPosterSheet: View {
                 }
             }
         }
-        .task(id: style) { render() }
+        .task(id: background) { render() }
     }
 
     @MainActor
     private func render() {
-        let renderer = ImageRenderer(content: SummaryPosterCard(stats: stats, style: style))
+        let renderer = ImageRenderer(content: SummaryPosterCard(stats: stats, background: background))
         renderer.scale = 3
         if let ui = renderer.uiImage {
             renderedUI = ui

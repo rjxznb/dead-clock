@@ -1,21 +1,132 @@
 import SwiftUI
+import PhotosUI
 
-enum PosterStyle: String, CaseIterable, Identifiable {
+/// 海报背景：渐变 / 黑底 / 调色板纯色 / 相册照片
+enum PosterBackground: Equatable {
     case gradient
     case dark
-    var id: String { rawValue }
-    var label: String {
-        switch self {
-        case .gradient: return String(localized: "poster.style.gradient")
-        case .dark: return String(localized: "poster.style.dark")
+    case solid(Color)
+    case photo(UIImage)
+
+    var isDark: Bool { self == .dark }
+}
+
+/// 深色系调色板：保证白色文字可读（与 Android 版一致）
+let posterSolidPalette: [Color] = [
+    Color(red: 0.70, green: 0.15, blue: 0.12),
+    Color(red: 0.91, green: 0.35, blue: 0.05),
+    Color(red: 0.78, green: 0.47, blue: 0.00),
+    Color(red: 0.18, green: 0.49, blue: 0.20),
+    Color(red: 0.00, green: 0.41, blue: 0.43),
+    Color(red: 0.10, green: 0.37, blue: 0.71),
+    Color(red: 0.40, green: 0.26, blue: 0.85),
+    Color(red: 0.76, green: 0.09, blue: 0.36),
+    Color(red: 0.22, green: 0.28, blue: 0.31),
+]
+
+/// 海报卡片的背景视图
+struct PosterBackgroundFill: View {
+    let background: PosterBackground
+
+    var body: some View {
+        switch background {
+        case .gradient:
+            Theme.posterBackground
+        case .dark:
+            Color(red: 0.05, green: 0.05, blue: 0.07)
+        case .solid(let color):
+            color
+        case .photo(let image):
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .overlay(Color.black.opacity(0.40))   // 暗化遮罩保证文字可读
         }
+    }
+}
+
+/// 背景选择条：渐变 / 黑底 / 纯色圆点 / 照片
+struct PosterSwatchRow: View {
+    @Binding var background: PosterBackground
+    @State private var photoItem: PhotosPickerItem?
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                swatch(isSelected: background == .gradient) {
+                    Circle().fill(Theme.posterBackground)
+                } action: {
+                    background = .gradient
+                }
+                swatch(isSelected: background == .dark) {
+                    Circle().fill(Color(red: 0.05, green: 0.05, blue: 0.07))
+                } action: {
+                    background = .dark
+                }
+                ForEach(0..<posterSolidPalette.count, id: \.self) { i in
+                    let color = posterSolidPalette[i]
+                    swatch(isSelected: background == .solid(color)) {
+                        Circle().fill(color)
+                    } action: {
+                        background = .solid(color)
+                    }
+                }
+                PhotosPicker(selection: $photoItem, matching: .images) {
+                    ZStack {
+                        Circle().fill(Color(white: 0.25))
+                        Image(systemName: "photo")
+                            .font(.caption)
+                            .foregroundStyle(.white)
+                    }
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Circle().strokeBorder(
+                            isPhoto ? Color.primary : Color.primary.opacity(0.2),
+                            lineWidth: isPhoto ? 2 : 1)
+                    )
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 4)
+        }
+        .onChange(of: photoItem) { item in
+            guard let item else { return }
+            Task {
+                if let data = try? await item.loadTransferable(type: Data.self),
+                   let ui = UIImage(data: data) {
+                    background = .photo(ui)
+                }
+            }
+        }
+    }
+
+    private var isPhoto: Bool {
+        if case .photo = background { return true }
+        return false
+    }
+
+    private func swatch<Content: View>(
+        isSelected: Bool,
+        @ViewBuilder content: () -> Content,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            content()
+                .frame(width: 32, height: 32)
+                .overlay(
+                    Circle().strokeBorder(
+                        isSelected ? Color.primary : Color.primary.opacity(0.2),
+                        lineWidth: isSelected ? 2 : 1)
+                )
+        }
+        .buttonStyle(.plain)
     }
 }
 
 /// 可渲染成图片分享的海报卡片
 struct PosterCard: View {
     let entry: JournalEntry
-    let style: PosterStyle
+    let background: PosterBackground
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
@@ -26,10 +137,10 @@ struct PosterCard: View {
             Text(String(format: NSLocalizedString("poster.quote.format", comment: ""), entry.text))
                 .font(.title3.weight(.bold))
                 .lineSpacing(8)
-                .foregroundStyle(style == .dark ? AnyShapeStyle(Theme.rainbow) : AnyShapeStyle(.white))
+                .foregroundStyle(background.isDark ? AnyShapeStyle(Theme.rainbow) : AnyShapeStyle(.white))
 
             Rectangle()
-                .fill(.white.opacity(style == .dark ? 0.15 : 0.3))
+                .fill(.white.opacity(background.isDark ? 0.15 : 0.3))
                 .frame(height: 1)
 
             VStack(alignment: .leading, spacing: 6) {
@@ -50,11 +161,7 @@ struct PosterCard: View {
         .foregroundStyle(.white)
         .padding(30)
         .frame(width: 330, alignment: .leading)
-        .background(
-            style == .gradient
-                ? AnyShapeStyle(Theme.posterBackground)
-                : AnyShapeStyle(Color(red: 0.05, green: 0.05, blue: 0.07))
-        )
+        .background { PosterBackgroundFill(background: background) }
         .clipShape(RoundedRectangle(cornerRadius: 26))
     }
 
@@ -77,53 +184,48 @@ struct PosterCard: View {
 struct PosterSheet: View {
     let entry: JournalEntry
     @Environment(\.dismiss) private var dismiss
-    @State private var style: PosterStyle = .gradient
+    @State private var background: PosterBackground = .gradient
     @State private var rendered: Image?
     @State private var renderedUI: UIImage?
     @State private var saved = false
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                Picker("poster.style.picker", selection: $style) {
-                    ForEach(PosterStyle.allCases) { s in
-                        Text(s.label).tag(s)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 40)
+            ScrollView {
+                VStack(spacing: 20) {
+                    PosterSwatchRow(background: $background)
 
-                PosterCard(entry: entry, style: style)
-                    .shadow(color: .black.opacity(0.25), radius: 20, y: 10)
+                    PosterCard(entry: entry, background: background)
+                        .shadow(color: .black.opacity(0.25), radius: 20, y: 10)
 
-                if let rendered {
-                    ShareLink(
-                        item: rendered,
-                        preview: SharePreview(String(localized: "poster.preview"), image: rendered)
-                    ) {
-                        Label("poster.share", systemImage: "square.and.arrow.up")
-                            .font(.headline)
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 36)
-                            .padding(.vertical, 13)
-                            .background(Theme.actionGradient, in: Capsule())
-                    }
-
-                    // 低调的辅助操作：无背景纯文字
-                    Button {
-                        if let ui = renderedUI {
-                            UIImageWriteToSavedPhotosAlbum(ui, nil, nil, nil)
-                            saved = true
+                    if let rendered {
+                        ShareLink(
+                            item: rendered,
+                            preview: SharePreview(String(localized: "poster.preview"), image: rendered)
+                        ) {
+                            Label("poster.share", systemImage: "square.and.arrow.up")
+                                .font(.headline)
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 36)
+                                .padding(.vertical, 13)
+                                .background(Theme.actionGradient, in: Capsule())
                         }
-                    } label: {
-                        Text(saved ? "poster.saved" : "poster.save")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+
+                        // 低调的辅助操作：无背景纯文字
+                        Button {
+                            if let ui = renderedUI {
+                                UIImageWriteToSavedPhotosAlbum(ui, nil, nil, nil)
+                                saved = true
+                            }
+                        } label: {
+                            Text(saved ? "poster.saved" : "poster.save")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
-                Spacer()
+                .padding(.vertical, 16)
             }
-            .padding(.top, 20)
             .navigationTitle(Text("poster.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -132,12 +234,12 @@ struct PosterSheet: View {
                 }
             }
         }
-        .task(id: style) { render() }
+        .task(id: background) { render() }
     }
 
     @MainActor
     private func render() {
-        let renderer = ImageRenderer(content: PosterCard(entry: entry, style: style))
+        let renderer = ImageRenderer(content: PosterCard(entry: entry, background: background))
         renderer.scale = 3
         if let ui = renderer.uiImage {
             renderedUI = ui
