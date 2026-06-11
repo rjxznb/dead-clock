@@ -63,6 +63,8 @@
 "poster.moment.n" = "Beautiful moment #%lld";
 "poster.brand" = "OneLife ⏳ Seize the day";
 "poster.share" = "Share poster";
+"poster.save" = "Save to album";
+"poster.saved" = "Saved to album";
 "poster.title" = "Share Poster";
 "poster.preview" = "OneLife · Beautiful moment";
 

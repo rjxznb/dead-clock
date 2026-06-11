@@ -79,6 +79,8 @@ struct PosterSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var style: PosterStyle = .gradient
     @State private var rendered: Image?
+    @State private var renderedUI: UIImage?
+    @State private var saved = false
 
     var body: some View {
         NavigationStack {
@@ -106,6 +108,18 @@ struct PosterSheet: View {
                             .padding(.vertical, 13)
                             .background(Theme.actionGradient, in: Capsule())
                     }
+
+                    // 低调的辅助操作：无背景纯文字
+                    Button {
+                        if let ui = renderedUI {
+                            UIImageWriteToSavedPhotosAlbum(ui, nil, nil, nil)
+                            saved = true
+                        }
+                    } label: {
+                        Text(saved ? "poster.saved" : "poster.save")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 Spacer()
             }
@@ -126,7 +140,9 @@ struct PosterSheet: View {
         let renderer = ImageRenderer(content: PosterCard(entry: entry, style: style))
         renderer.scale = 3
         if let ui = renderer.uiImage {
+            renderedUI = ui
             rendered = Image(uiImage: ui)
+            saved = false
         }
     }
 }

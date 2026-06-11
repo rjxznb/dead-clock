@@ -65,6 +65,7 @@ targets:
         # Portrait-only is allowed iff the app opts out of iPad
         # multitasking; without this Apple rejects with ITMS-90474.
         UIRequiresFullScreen: true
+        NSPhotoLibraryAddUsageDescription: OneLife saves your posters to the photo album.
         ITSAppUsesNonExemptEncryption: false
 
   DeadClockMac:

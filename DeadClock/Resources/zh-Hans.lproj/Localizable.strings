@@ -63,6 +63,8 @@
 "poster.moment.n" = "第 %lld 个美好瞬间";
 "poster.brand" = "OneLife ⏳ 把握当下";
 "poster.share" = "分享海报";
+"poster.save" = "保存到相册";
+"poster.saved" = "已保存到相册";
 "poster.title" = "分享海报";
 "poster.preview" = "OneLife · 美好瞬间";
 
