@@ -49,6 +49,36 @@ jobs:
           fi
           cp ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8 $RUNNER_TEMP/AuthKey.p8
 
+      - name: Prune cloud-managed certificates (quota guard)
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          # Cloud signing mints a fresh "Created via API" certificate on every
+          # run; the team quota fills after ~10 builds and archiving dies with
+          # a misleading "choose a certificate to revoke" error. Revoke them
+          # all up front — the run then mints one clean new certificate.
+          b64url() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+          H=$(printf '{"alg":"ES256","kid":"%s","typ":"JWT"}' "$ASC_KEY_ID" | b64url)
+          NOW=$(date +%s)
+          P=$(printf '{"iss":"%s","iat":%d,"exp":%d,"aud":"appstoreconnect-v1"}' "$ASC_ISSUER_ID" "$NOW" $((NOW+1100)) | b64url)
+          printf '%s.%s' "$H" "$P" | openssl dgst -sha256 -sign "$RUNNER_TEMP/AuthKey.p8" -binary > /tmp/sig.der
+          RS=$(openssl asn1parse -inform DER -in /tmp/sig.der | sed -n 's/.*INTEGER *://p')
+          R=$(echo "$RS" | sed -n 1p); S=$(echo "$RS" | sed -n 2p)
+          R=${R#00}; S=${S#00}
+          R=$(printf '%064s' "$R" | tr ' ' 0); S=$(printf '%064s' "$S" | tr ' ' 0)
+          SIG=$(printf '%s%s' "$R" "$S" | xxd -r -p | b64url)
+          TOKEN="$H.$P.$SIG"
+          curl -s -H "Authorization: Bearer $TOKEN" \
+            "https://api.appstoreconnect.apple.com/v1/certificates?limit=200" -o /tmp/certs.json
+          IDS=$(grep -B6 '"Created via API"' /tmp/certs.json | grep '"id"' | sed 's/.*: "\(.*\)".*/\1/' | sort -u)
+          for ID in $IDS; do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE \
+              -H "Authorization: Bearer $TOKEN" \
+              "https://api.appstoreconnect.apple.com/v1/certificates/$ID")
+            echo "revoked $ID ($CODE)"
+          done
+
       - name: Set CURRENT_PROJECT_VERSION = run_number + 100
         run: |
           # Each TestFlight upload needs a unique (version, build) pair.
@@ -129,8 +159,9 @@ jobs:
   upload-macos:
     name: Archive + Upload macOS to TestFlight
     runs-on: macos-15
-    # Requires the macOS platform to be added to the app record in ASC;
-    # keep non-blocking until that one-time setup is done.
+    # Runs after the iOS job so the certificate prune step never races
+    # with this job's own signing.
+    needs: upload
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
