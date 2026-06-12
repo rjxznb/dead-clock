@@ -160,6 +160,11 @@ jobs:
           xcrun simctl launch "$WUDID" "$BID.watchkitapp" -AppleLanguages "$LANG1"
           sleep 5
           xcrun simctl io "$WUDID" screenshot shots/watch-1-countdown.png
+          xcrun simctl terminate "$WUDID" "$BID.watchkitapp" 2>/dev/null || true
+          sleep 1
+          xcrun simctl launch "$WUDID" "$BID.watchkitapp" --page2 -AppleLanguages "$LANG1"
+          sleep 5
+          xcrun simctl io "$WUDID" screenshot shots/watch-2-progress.png
 
       - name: Build and render macOS screenshot
         run: |
@@ -174,7 +179,9 @@ jobs:
             build | tail -3
           BIN=$(find DDmac/Build/Products/Debug -path "*DeadClockMac.app/Contents/MacOS/DeadClockMac" | head -1)
           if [ "$LOCALE" = "zh-Hans" ]; then LANG1="(zh-Hans)"; else LANG1="(en)"; fi
-          "$BIN" --render-screenshot "$PWD/shots/mac-1-menubar.png" -AppleLanguages "$LANG1"
+          for STYLE in 1 2 3; do
+            "$BIN" --render-screenshot "$PWD/shots/mac-$STYLE.png" --shot-style "$STYLE" -AppleLanguages "$LANG1"
+          done
           ls -la shots/
 
       - name: Upload screenshots artifact

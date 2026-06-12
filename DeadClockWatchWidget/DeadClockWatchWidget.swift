@@ -24,7 +24,9 @@ struct WatchProvider: TimelineProvider {
     }
 }
 
-struct WatchWidgetView: View {
+// MARK: - 样式一：时光倒计时（计时器为主）
+
+struct TimerWidgetView: View {
     @Environment(\.widgetFamily) private var family
     var entry: WatchEntry
 
@@ -78,7 +80,7 @@ struct DeadClockWatchWidget: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WatchProvider()) { entry in
-            WatchWidgetView(entry: entry)
+            TimerWidgetView(entry: entry)
         }
         .configurationDisplayName("widget.name")
         .description("widget.desc")
@@ -91,10 +93,131 @@ struct DeadClockWatchWidget: Widget {
     }
 }
 
+// MARK: - 样式二：大字剩余天数
+
+struct DaysWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    var entry: WatchEntry
+
+    var body: some View {
+        let days = DeathClock.remainingDays(at: entry.date)
+
+        switch family {
+        case .accessoryInline:
+            Text(String(format: NSLocalizedString("widget.inline", comment: ""), days))
+                .watchWidgetBackground()
+
+        case .accessoryCorner:
+            Text("\(days)")
+                .font(.system(.headline, design: .monospaced).weight(.heavy))
+                .widgetLabel {
+                    Text("widget.corner.label")
+                }
+                .watchWidgetBackground()
+
+        default: // .accessoryCircular
+            VStack(spacing: 0) {
+                Text("\(days)")
+                    .font(.system(size: 22, weight: .heavy, design: .monospaced))
+                    .minimumScaleFactor(0.5)
+                    .lineLimit(1)
+                Text("widget.day.unit.short")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+            }
+            .watchWidgetBackground()
+        }
+    }
+}
+
+struct DeadClockDaysWidget: Widget {
+    let kind = "DeadClockDaysWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: WatchProvider()) { entry in
+            DaysWidgetView(entry: entry)
+        }
+        .configurationDisplayName("widget.days.name")
+        .description("widget.desc")
+        .supportedFamilies([
+            .accessoryCircular,
+            .accessoryCorner,
+            .accessoryInline,
+        ])
+    }
+}
+
+// MARK: - 样式三：人生进度环
+
+struct RingWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    var entry: WatchEntry
+
+    var body: some View {
+        let progress = DeathClock.lifeProgress(at: entry.date)
+
+        switch family {
+        case .accessoryCorner:
+            Text(String(format: "%.0f%%", progress * 100))
+                .font(.headline)
+                .widgetLabel {
+                    Text("widget.ring.label")
+                }
+                .watchWidgetBackground()
+
+        case .accessoryRectangular:
+            HStack(spacing: 10) {
+                Gauge(value: progress) {
+                    Image(systemName: "hourglass")
+                } currentValueLabel: {
+                    Text("\(Int(progress * 100))%")
+                }
+                .gaugeStyle(.accessoryCircularCapacity)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("widget.ring.name")
+                        .font(.caption)
+                    Text(String(format: "%.4f%%", progress * 100))
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .watchWidgetBackground()
+
+        default: // .accessoryCircular
+            Gauge(value: progress) {
+                Image(systemName: "hourglass")
+            } currentValueLabel: {
+                Text("\(Int(progress * 100))%")
+            }
+            .gaugeStyle(.accessoryCircularCapacity)
+            .watchWidgetBackground()
+        }
+    }
+}
+
+struct DeadClockRingWidget: Widget {
+    let kind = "DeadClockRingWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: WatchProvider()) { entry in
+            RingWidgetView(entry: entry)
+        }
+        .configurationDisplayName("widget.ring.name")
+        .description("widget.desc")
+        .supportedFamilies([
+            .accessoryCircular,
+            .accessoryCorner,
+            .accessoryRectangular,
+        ])
+    }
+}
+
 @main
 struct DeadClockWatchWidgetBundle: WidgetBundle {
     var body: some Widget {
         DeadClockWatchWidget()
+        DeadClockDaysWidget()
+        DeadClockRingWidget()
     }
 }
 

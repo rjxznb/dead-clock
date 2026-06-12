@@ -4,3 +4,7 @@
 "widget.corner.label" = "days left";
 "widget.name" = "Time Countdown";
 "widget.desc" = "A glance at your wrist turns time into motivation.";
+"widget.days.name" = "Days Left";
+"widget.ring.name" = "Life Ring";
+"widget.ring.label" = "Journey lived";
+"widget.day.unit.short" = "days";

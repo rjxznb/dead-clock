@@ -2,6 +2,22 @@ import SwiftUI
 import PhotosUI
 import WidgetKit
 
+enum AppLanguage: String, CaseIterable, Identifiable {
+    case system
+    case chinese = "zh-Hans"
+    case english = "en"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .system: return String(localized: "lang.system")
+        case .chinese: return "简体中文"
+        case .english: return "English"
+        }
+    }
+}
+
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var birthDate = DeathClock.birthDate
@@ -10,6 +26,10 @@ struct SettingsView: View {
     @State private var theme = ThemeStore.current
     @State private var photoItems: [PhotosPickerItem] = []
     @State private var photoCount = ThemeStore.photoCount
+
+    @State private var language: AppLanguage = AppLanguage(
+        rawValue: UserDefaults.standard.string(forKey: "appLanguageChoice") ?? "system") ?? .system
+    @State private var showRestartAlert = false
 
     @State private var reminderOn = ReminderManager.isEnabled
     @State private var reminderTime: Date = {
@@ -49,6 +69,26 @@ struct SettingsView: View {
                         ForEach(AppTheme.allCases) { t in
                             Text(t.label).tag(t)
                         }
+                    }
+
+                    Picker("settings.language", selection: $language) {
+                        ForEach(AppLanguage.allCases) { lang in
+                            Text(lang.label).tag(lang)
+                        }
+                    }
+                    .onChange(of: language) { newValue in
+                        UserDefaults.standard.set(newValue.rawValue, forKey: "appLanguageChoice")
+                        if newValue == .system {
+                            UserDefaults.standard.removeObject(forKey: "AppleLanguages")
+                        } else {
+                            UserDefaults.standard.set([newValue.rawValue], forKey: "AppleLanguages")
+                        }
+                        showRestartAlert = true
+                    }
+                    .alert("settings.language.restart.title", isPresented: $showRestartAlert) {
+                        Button("settings.alert.ok") {}
+                    } message: {
+                        Text("settings.language.restart.body")
                     }
 
                     if theme == .photo {

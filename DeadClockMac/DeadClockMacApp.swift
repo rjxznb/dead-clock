@@ -6,7 +6,11 @@ struct DeadClockMacApp: App {
         // 截图流水线：渲染 App Store 用的 2880x1800 营销图后退出
         let args = ProcessInfo.processInfo.arguments
         if let i = args.firstIndex(of: "--render-screenshot"), i + 1 < args.count {
-            let renderer = ImageRenderer(content: MacScreenshotView())
+            var variant = 1
+            if let v = args.firstIndex(of: "--shot-style"), v + 1 < args.count {
+                variant = Int(args[v + 1]) ?? 1
+            }
+            let renderer = ImageRenderer(content: MacScreenshotView(variant: variant))
             renderer.scale = 2
             if let img = renderer.nsImage,
                let tiff = img.tiffRepresentation,
@@ -31,6 +35,47 @@ struct DeadClockMacApp: App {
 /// App Store macOS 截图：纯 SwiftUI 绘制（ImageRenderer 渲染不了 AppKit 原生控件，
 /// 所以不能直接用 MacCountdownView 里的 DatePicker/Stepper）
 struct MacScreenshotView: View {
+    var variant: Int = 1
+
+    private var bgColors: [Color] {
+        switch variant {
+        case 2:
+            return [
+                Color(red: 0.04, green: 0.07, blue: 0.20),
+                Color(red: 0.08, green: 0.22, blue: 0.42),
+                Color(red: 0.05, green: 0.45, blue: 0.50),
+            ]
+        case 3:
+            return [
+                Color(red: 0.16, green: 0.05, blue: 0.25),
+                Color(red: 0.55, green: 0.10, blue: 0.45),
+                Color(red: 0.95, green: 0.35, blue: 0.45),
+            ]
+        default:
+            return [
+                Color(red: 0.10, green: 0.08, blue: 0.25),
+                Color(red: 0.45, green: 0.13, blue: 0.32),
+                Color(red: 0.91, green: 0.45, blue: 0.25),
+            ]
+        }
+    }
+
+    private var titleKey: LocalizedStringKey {
+        switch variant {
+        case 2: return "mac.shot.title2"
+        case 3: return "mac.shot.title3"
+        default: return "mac.shot.title"
+        }
+    }
+
+    private var subtitleKey: LocalizedStringKey {
+        switch variant {
+        case 2: return "mac.shot.subtitle2"
+        case 3: return "mac.shot.subtitle3"
+        default: return "mac.shot.subtitle"
+        }
+    }
+
     private let rainbow = LinearGradient(
         colors: [
             Color(red: 1.00, green: 0.42, blue: 0.62),
@@ -57,13 +102,7 @@ struct MacScreenshotView: View {
         let progress = DeathClock.lifeProgress(at: now)
 
         ZStack(alignment: .top) {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.10, green: 0.08, blue: 0.25),
-                    Color(red: 0.45, green: 0.13, blue: 0.32),
-                    Color(red: 0.91, green: 0.45, blue: 0.25),
-                ],
-                startPoint: .topLeading, endPoint: .bottomTrailing)
+            LinearGradient(colors: bgColors, startPoint: .topLeading, endPoint: .bottomTrailing)
 
             VStack(spacing: 0) {
                 // 菜单栏（模拟）
@@ -87,11 +126,11 @@ struct MacScreenshotView: View {
 
                 HStack(alignment: .top, spacing: 0) {
                     VStack(alignment: .leading, spacing: 18) {
-                        Text("mac.shot.title")
+                        Text(titleKey)
                             .font(.system(size: 46, weight: .heavy))
                             .foregroundStyle(.white)
                             .lineSpacing(8)
-                        Text("mac.shot.subtitle")
+                        Text(subtitleKey)
                             .font(.system(size: 21))
                             .foregroundStyle(.white.opacity(0.85))
                     }

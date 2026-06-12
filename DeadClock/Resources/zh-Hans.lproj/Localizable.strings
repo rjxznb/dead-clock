@@ -29,6 +29,10 @@
 "settings.age.format" = "%lld 岁";
 "settings.deathdate" = "旅程终点";
 "settings.appearance" = "外观";
+"settings.language" = "语言";
+"lang.system" = "跟随系统";
+"settings.language.restart.title" = "需要重启";
+"settings.language.restart.body" = "退出并重新打开 OneLife 后，语言设置生效。";
 "settings.theme" = "主题";
 "settings.photo.pick" = "选择背景照片（可多选）";
 "settings.photo.change" = "更换背景照片（当前 %lld 张）";

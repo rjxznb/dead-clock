@@ -4,3 +4,7 @@
 "widget.corner.label" = "还拥有 · 天";
 "widget.name" = "时光倒计时";
 "widget.desc" = "抬腕即见：把余生变成动力。";
+"widget.days.name" = "剩余天数";
+"widget.ring.name" = "人生进度环";
+"widget.ring.label" = "已走过";
+"widget.day.unit.short" = "天";

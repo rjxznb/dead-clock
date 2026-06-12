@@ -3,6 +3,12 @@
 "mac.shot.title" = "Your remaining time,
 always in the menu bar";
 "mac.shot.subtitle" = "Live countdown · One-click settings";
+"mac.shot.title2" = "Glance up.
+Remember today counts.";
+"mac.shot.subtitle2" = "Always visible, never in the way";
+"mac.shot.title3" = "Make every
+second visible";
+"mac.shot.subtitle3" = "A gentle nudge on your desktop";
 "mac.quit" = "Quit OneLife";
 "headline.normal" = "Seize the day · You still have";
 "unit.seconds.caption" = "seconds";

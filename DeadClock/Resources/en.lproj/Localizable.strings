@@ -29,6 +29,10 @@
 "settings.age.format" = "%lld yrs";
 "settings.deathdate" = "End of journey";
 "settings.appearance" = "Appearance";
+"settings.language" = "Language";
+"lang.system" = "Follow System";
+"settings.language.restart.title" = "Restart Required";
+"settings.language.restart.body" = "Quit and reopen OneLife for the language change to take effect.";
 "settings.theme" = "Theme";
 "settings.photo.pick" = "Choose background photos (multi-select)";
 "settings.photo.change" = "Change background photos (%lld selected)";

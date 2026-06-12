@@ -1,2 +1,8 @@
 "watch.header" = "You still have";
 "watch.day.unit" = "days";
+"watch.u.y" = "yrs";
+"watch.u.d" = "days";
+"watch.u.h" = "hrs";
+"watch.u.m" = "min";
+"watch.lived" = "lived";
+"watch.journey" = "Life journey";
