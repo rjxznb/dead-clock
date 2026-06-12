@@ -1,0 +1,186 @@
+name: App Store Screenshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      locale:
+        description: 'UI locale for the screenshots (en or zh-Hans)'
+        required: true
+        default: 'zh-Hans'
+
+jobs:
+  screenshots:
+    name: Capture iPhone + Watch + Mac screenshots
+    runs-on: macos-15
+    env:
+      LOCALE: ${{ github.event.inputs.locale }}
+      BID: com.rjxznb.deadclock
+      GROUP: group.com.rjxznb.deadclock
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate .xcodeproj
+        run: xcodegen generate --quiet
+
+      - name: Pick simulators
+        id: sims
+        run: |
+          LIST=$(xcrun simctl list devices available -j)
+          IUDID=$(echo "$LIST" | jq -r '.devices | to_entries | .[] | select(.key | contains("iOS")) | .value[] | select(.name | endswith("Pro Max")) | .udid' | head -1)
+          if [ -z "$IUDID" ]; then
+            IUDID=$(echo "$LIST" | jq -r '.devices | to_entries | .[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone")) | .udid' | head -1)
+          fi
+          WUDID=$(echo "$LIST" | jq -r '.devices | to_entries | .[] | select(.key | contains("watchOS")) | .value[] | select(.name | contains("46mm")) | .udid' | head -1)
+          if [ -z "$WUDID" ]; then
+            WUDID=$(echo "$LIST" | jq -r '.devices | to_entries | .[] | select(.key | contains("watchOS")) | .value[] | select(.name | contains("Apple Watch")) | .udid' | head -1)
+          fi
+          echo "iphone=$IUDID" >> "$GITHUB_OUTPUT"
+          echo "watch=$WUDID" >> "$GITHUB_OUTPUT"
+          echo "iPhone: $IUDID  Watch: $WUDID"
+
+      - name: Build iOS app for simulator
+        env:
+          IUDID: ${{ steps.sims.outputs.iphone }}
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project DeadClock.xcodeproj \
+            -scheme DeadClock \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=${IUDID}" \
+            -derivedDataPath ./DDios \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            build | tail -3
+
+      - name: Generate demo journal entries
+        run: |
+          python3 - <<'EOF'
+          import json, os, datetime
+          locale = os.environ.get("LOCALE", "en")
+          zh = ["教会了奶奶用视频通话，她学会之后笑得像个孩子",
+                "傍晚跑步时看到了特别完整的晚霞，停下来看了十分钟",
+                "把拖了两周的项目第一版发出去了，紧张又兴奋",
+                "和爸妈视频聊了一个小时，老家院子里的石榴树开花了",
+                "读完了一本搁置很久的书，最后一章让我热泪盈眶",
+                "给三年没联系的老朋友发了消息，聊得像从未离开",
+                "今天的咖啡拉花第一次成功了，小小的事也值得开心"]
+          en = ["Taught grandma video calls today — she smiled like a kid",
+                "Caught a perfect sunset on my evening run and just stood there",
+                "Finally shipped the first version of my side project",
+                "An hour-long call with mom and dad about the old garden",
+                "Finished the book I kept postponing — the last chapter got me",
+                "Messaged an old friend after three years; felt like no time passed",
+                "First successful latte art. Small things count too"]
+          texts = zh if locale == "zh-Hans" else en
+          today = datetime.date.today()
+          entries = []
+          for i, t in enumerate(texts):
+              d = today - datetime.timedelta(days=len(texts) - 1 - i)
+              entries.append({"dateKey": d.strftime("%Y-%m-%d"), "text": t, "updatedAt": 803000000.0})
+          with open("/tmp/entries.json", "w") as f:
+              json.dump(entries, f, ensure_ascii=False)
+          EOF
+          echo "ENTRIES_HEX=$(xxd -p /tmp/entries.json | tr -d '\n')" >> "$GITHUB_ENV"
+
+      - name: Capture iPhone screenshots
+        env:
+          IUDID: ${{ steps.sims.outputs.iphone }}
+        run: |
+          set -e
+          mkdir -p shots
+          xcrun simctl boot "$IUDID" || true
+          xcrun simctl bootstatus "$IUDID" -b
+
+          if [ "$LOCALE" = "zh-Hans" ]; then
+            LANG1="(zh-Hans)"; LANG2="zh_CN"
+          else
+            LANG1="(en)"; LANG2="en_US"
+          fi
+
+          seed() {
+            xcrun simctl spawn "$1" defaults write "$GROUP" birthDate -float 897868800
+            xcrun simctl spawn "$1" defaults write "$GROUP" lifeExpectancyYears -float 80
+            xcrun simctl spawn "$1" defaults write "$GROUP" journalEntries -data "$ENTRIES_HEX"
+          }
+          seed "$IUDID"
+
+          APP_PATH=$(find DDios/Build/Products/Debug-iphonesimulator -maxdepth 2 -name "DeadClock.app" | head -1)
+          xcrun simctl install "$IUDID" "$APP_PATH"
+
+          shot() {  # $1 theme  $2 extra-arg(optional)  $3 filename
+            xcrun simctl spawn "$IUDID" defaults write "$GROUP" appTheme -string "$1"
+            xcrun simctl terminate "$IUDID" "$BID" 2>/dev/null || true
+            sleep 1
+            if [ -n "$2" ]; then
+              xcrun simctl launch "$IUDID" "$BID" "$2" -AppleLanguages "$LANG1" -AppleLocale "$LANG2"
+            else
+              xcrun simctl launch "$IUDID" "$BID" -AppleLanguages "$LANG1" -AppleLocale "$LANG2"
+            fi
+            sleep 5
+            xcrun simctl io "$IUDID" screenshot "shots/$3"
+          }
+
+          shot dark     ""              "iphone-1-dark.png"
+          shot gradient ""              "iphone-2-gradient.png"
+          shot light    ""              "iphone-3-light.png"
+          shot dark     "--open-checkin" "iphone-4-checkin.png"
+          shot dark     "--open-journal" "iphone-5-journal.png"
+          shot dark     "--open-poster"  "iphone-6-poster.png"
+          shot red      ""              "iphone-7-red.png"
+          ls -la shots/
+
+      - name: Build and capture Apple Watch screenshot
+        env:
+          WUDID: ${{ steps.sims.outputs.watch }}
+        run: |
+          set -e
+          xcrun simctl boot "$WUDID" || true
+          xcrun simctl bootstatus "$WUDID" -b
+          xcodebuild \
+            -project DeadClock.xcodeproj \
+            -scheme DeadClockWatch \
+            -configuration Debug \
+            -destination "platform=watchOS Simulator,id=${WUDID}" \
+            -derivedDataPath ./DDwatch \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            build | tail -3
+          WAPP=$(find DDwatch/Build/Products/Debug-watchsimulator -maxdepth 2 -name "DeadClockWatch.app" | head -1)
+          xcrun simctl install "$WUDID" "$WAPP"
+          xcrun simctl spawn "$WUDID" defaults write "$GROUP" birthDate -float 897868800
+          xcrun simctl spawn "$WUDID" defaults write "$GROUP" lifeExpectancyYears -float 80
+          if [ "$LOCALE" = "zh-Hans" ]; then LANG1="(zh-Hans)"; else LANG1="(en)"; fi
+          xcrun simctl launch "$WUDID" "$BID.watchkitapp" -AppleLanguages "$LANG1"
+          sleep 5
+          xcrun simctl io "$WUDID" screenshot shots/watch-1-countdown.png
+
+      - name: Build and render macOS screenshot
+        run: |
+          set -e
+          xcodebuild \
+            -project DeadClock.xcodeproj \
+            -scheme DeadClockMac \
+            -configuration Debug \
+            -destination "platform=macOS" \
+            -derivedDataPath ./DDmac \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            build | tail -3
+          BIN=$(find DDmac/Build/Products/Debug -path "*DeadClockMac.app/Contents/MacOS/DeadClockMac" | head -1)
+          if [ "$LOCALE" = "zh-Hans" ]; then LANG1="(zh-Hans)"; else LANG1="(en)"; fi
+          "$BIN" --render-screenshot "$PWD/shots/mac-1-menubar.png" -AppleLanguages "$LANG1"
+          ls -la shots/
+
+      - name: Upload screenshots artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: appstore-screenshots-${{ github.event.inputs.locale }}
+          path: shots/
+          retention-days: 30
+          if-no-files-found: error

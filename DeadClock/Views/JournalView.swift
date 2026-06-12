@@ -91,6 +91,13 @@ struct JournalView: View {
                 SummaryPosterSheet(period: period)
             }
         }
+        .onAppear {
+            // 截图流水线：直接打开第一条记录的海报
+            if ProcessInfo.processInfo.arguments.contains("--open-poster"),
+               let first = entries.first {
+                activeSheet = .poster(first)
+            }
+        }
     }
 
     private func dateLabel(for entry: JournalEntry) -> String {

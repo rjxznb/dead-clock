@@ -38,6 +38,12 @@ struct CountdownView: View {
         .onAppear {
             ReminderManager.reschedule()
             if theme == .photo { parallax.start() }
+            // 截图流水线用的启动参数（真机用户不可达）
+            let args = ProcessInfo.processInfo.arguments
+            if args.contains("--open-checkin") { showCheckIn = true }
+            if args.contains("--open-journal") || args.contains("--open-poster") {
+                showJournal = true
+            }
         }
         .onDisappear {
             parallax.stop()
