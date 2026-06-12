@@ -1,4 +1,8 @@
 "mac.menubar.format" = "⏳ %lld d";
+"mac.shot.days" = "d";
+"mac.shot.title" = "Your remaining time,
+always in the menu bar";
+"mac.shot.subtitle" = "Live countdown · One-click settings";
 "mac.quit" = "Quit OneLife";
 "headline.normal" = "Seize the day · You still have";
 "unit.seconds.caption" = "seconds";

@@ -1,4 +1,8 @@
 "mac.menubar.format" = "⏳ %lld 天";
+"mac.shot.days" = "天";
+"mac.shot.title" = "你的余生
+常驻菜单栏";
+"mac.shot.subtitle" = "实时倒计时 · 一键设置";
 "mac.quit" = "退出 OneLife";
 "headline.normal" = "把握当下 · 你还拥有";
 "unit.seconds.caption" = "秒";

@@ -28,10 +28,35 @@ struct DeadClockMacApp: App {
     }
 }
 
-/// App Store macOS 截图：渐变背景 + 居中的菜单栏弹窗卡片
+/// App Store macOS 截图：纯 SwiftUI 绘制（ImageRenderer 渲染不了 AppKit 原生控件，
+/// 所以不能直接用 MacCountdownView 里的 DatePicker/Stepper）
 struct MacScreenshotView: View {
+    private let rainbow = LinearGradient(
+        colors: [
+            Color(red: 1.00, green: 0.42, blue: 0.62),
+            Color(red: 1.00, green: 0.62, blue: 0.26),
+            Color(red: 1.00, green: 0.79, blue: 0.34),
+            Color(red: 0.18, green: 0.80, blue: 0.44),
+            Color(red: 0.00, green: 0.82, blue: 0.83),
+            Color(red: 0.65, green: 0.37, blue: 0.92),
+        ],
+        startPoint: .leading, endPoint: .trailing)
+
+    private static let secondsFormatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.maximumFractionDigits = 1
+        f.minimumFractionDigits = 1
+        return f
+    }()
+
     var body: some View {
-        ZStack {
+        let now = Date()
+        let days = DeathClock.remainingDays(at: now)
+        let remaining = DeathClock.remainingSeconds(at: now)
+        let progress = DeathClock.lifeProgress(at: now)
+
+        ZStack(alignment: .top) {
             LinearGradient(
                 colors: [
                     Color(red: 0.10, green: 0.08, blue: 0.25),
@@ -40,13 +65,79 @@ struct MacScreenshotView: View {
                 ],
                 startPoint: .topLeading, endPoint: .bottomTrailing)
 
-            VStack(spacing: 28) {
-                Text("⏳ OneLife")
-                    .font(.system(size: 44, weight: .heavy))
-                    .foregroundStyle(.white)
-                MacCountdownView()
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
-                    .shadow(color: .black.opacity(0.35), radius: 30, y: 14)
+            VStack(spacing: 0) {
+                // 菜单栏（模拟）
+                HStack(spacing: 14) {
+                    Text("OneLife")
+                        .font(.system(size: 13, weight: .bold))
+                    Spacer()
+                    Text("⏳ \(days) \(String(localized: "mac.shot.days"))")
+                        .font(.system(size: 13, weight: .semibold))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 3)
+                        .background(Color.white.opacity(0.25),
+                                    in: RoundedRectangle(cornerRadius: 5))
+                    Text("9:41")
+                        .font(.system(size: 13))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 18)
+                .frame(height: 32)
+                .background(Color.black.opacity(0.28))
+
+                HStack(alignment: .top, spacing: 0) {
+                    VStack(alignment: .leading, spacing: 18) {
+                        Text("mac.shot.title")
+                            .font(.system(size: 46, weight: .heavy))
+                            .foregroundStyle(.white)
+                            .lineSpacing(8)
+                        Text("mac.shot.subtitle")
+                            .font(.system(size: 21))
+                            .foregroundStyle(.white.opacity(0.85))
+                    }
+                    .padding(.leading, 90)
+                    .padding(.top, 200)
+
+                    Spacer()
+
+                    // 菜单栏弹窗（模拟）
+                    VStack(spacing: 14) {
+                        Text("headline.normal")
+                            .font(.caption)
+                            .foregroundStyle(Color(white: 0.65))
+                            .tracking(3)
+                        Text(Self.secondsFormatter.string(from: NSNumber(value: remaining)) ?? "")
+                            .font(.system(size: 27, weight: .heavy, design: .monospaced))
+                            .foregroundStyle(rainbow)
+                            .lineLimit(1)
+                        Text("unit.seconds.caption")
+                            .font(.caption2)
+                            .foregroundStyle(Color(white: 0.65))
+
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(Color.white.opacity(0.15))
+                                Capsule()
+                                    .fill(rainbow)
+                                    .frame(width: geo.size.width * progress)
+                            }
+                        }
+                        .frame(height: 6)
+
+                        Text(String(format: NSLocalizedString("progress.normal", comment: ""),
+                                    progress * 100))
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundStyle(Color(white: 0.65))
+                    }
+                    .padding(24)
+                    .frame(width: 320)
+                    .background(Color(red: 0.12, green: 0.12, blue: 0.14),
+                                in: RoundedRectangle(cornerRadius: 14))
+                    .shadow(color: .black.opacity(0.4), radius: 28, y: 12)
+                    .padding(.trailing, 70)
+                    .padding(.top, 14)
+                }
+                Spacer()
             }
         }
         .frame(width: 1440, height: 900)
