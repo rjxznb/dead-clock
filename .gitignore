@@ -21,3 +21,9 @@ AuthKey_*.p8
 .DS_Store
 *.swp
 Thumbs.db
+
+# Local saved pages / personal files
+*Claude_files/
+*.html.обть
+Gemini_Generated_*.png
+ce88724a-*.png
