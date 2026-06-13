@@ -42,9 +42,14 @@ jobs:
           if [ -z "$WUDID" ]; then
             WUDID=$(echo "$LIST" | jq -r '.devices | to_entries | .[] | select(.key | contains("watchOS")) | .value[] | select(.name | contains("Apple Watch")) | .udid' | head -1)
           fi
+          PUDID=$(echo "$LIST" | jq -r '.devices | to_entries | .[] | select(.key | contains("iOS")) | .value[] | select(.name | test("iPad Pro 13")) | .udid' | head -1)
+          if [ -z "$PUDID" ]; then
+            PUDID=$(echo "$LIST" | jq -r '.devices | to_entries | .[] | select(.key | contains("iOS")) | .value[] | select(.name | contains("iPad Pro")) | .udid' | head -1)
+          fi
           echo "iphone=$IUDID" >> "$GITHUB_OUTPUT"
           echo "watch=$WUDID" >> "$GITHUB_OUTPUT"
-          echo "iPhone: $IUDID  Watch: $WUDID"
+          echo "ipad=$PUDID" >> "$GITHUB_OUTPUT"
+          echo "iPhone: $IUDID  iPad: $PUDID  Watch: $WUDID"
 
       - name: Build iOS app for simulator
         env:
@@ -93,6 +98,7 @@ jobs:
       - name: Capture iPhone screenshots
         env:
           IUDID: ${{ steps.sims.outputs.iphone }}
+          PUDID: ${{ steps.sims.outputs.ipad }}
         run: |
           set -e
           mkdir -p shots
@@ -141,6 +147,35 @@ jobs:
           for f in shots/iphone-*.png; do
             sips -z 2778 1284 "$f" >/dev/null
           done
+
+          # ---- iPad Pro 13" 截图（App Store 必填）----
+          if [ -n "$PUDID" ]; then
+            xcrun simctl boot "$PUDID" || true
+            xcrun simctl bootstatus "$PUDID" -b
+            seed "$PUDID"
+            xcrun simctl install "$PUDID" "$APP_PATH"
+            ipadshot() {  # $1 theme  $2 extra-arg  $3 filename
+              xcrun simctl spawn "$PUDID" defaults write "$GROUP" appTheme -string "$1"
+              xcrun simctl terminate "$PUDID" "$BID" 2>/dev/null || true
+              sleep 1
+              if [ -n "$2" ]; then
+                xcrun simctl launch "$PUDID" "$BID" "$2" -AppleLanguages "$LANG1" -AppleLocale "$LANG2"
+              else
+                xcrun simctl launch "$PUDID" "$BID" -AppleLanguages "$LANG1" -AppleLocale "$LANG2"
+              fi
+              sleep 5
+              xcrun simctl io "$PUDID" screenshot "shots/$3"
+            }
+            ipadshot dark     ""              "ipad-1-dark.png"
+            ipadshot gradient ""              "ipad-2-gradient.png"
+            ipadshot light    ""              "ipad-3-light.png"
+            ipadshot dark     "--open-checkin" "ipad-4-checkin.png"
+            ipadshot dark     "--open-poster"  "ipad-5-poster.png"
+            # 归一到 13" 接受尺寸 2048x2732（13"M4 原生 2064x2752，差异可忽略）
+            for f in shots/ipad-*.png; do
+              sips -z 2732 2048 "$f" >/dev/null
+            done
+          fi
           ls -la shots/
 
       - name: Build and capture Apple Watch screenshot

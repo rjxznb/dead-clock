@@ -18,7 +18,9 @@ settings:
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.10"
     IPHONEOS_DEPLOYMENT_TARGET: "16.0"
-    TARGETED_DEVICE_FAMILY: "1"
+    # Universal: iPhone + iPad. Portrait-only on iPad is allowed because
+    # UIRequiresFullScreen opts out of multitasking (see Info.plist).
+    TARGETED_DEVICE_FAMILY: "1,2"
     # Automatic signing — Xcode's Cloud Signing flow. CI uses
     # -allowProvisioningUpdates + ASC API key. We intentionally do NOT
     # set CODE_SIGN_IDENTITY; forcing it conflicts with Automatic mode.
