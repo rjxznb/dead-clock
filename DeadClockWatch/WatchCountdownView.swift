@@ -1,26 +1,60 @@
 import SwiftUI
 
-private let rainbow = LinearGradient(
-    colors: [
+/// 表盘配色方案。默认彩虹，截图流水线通过 `--theme <name>` 启动参数切换，
+/// 让 App Store 能展示多套配色。
+private enum WatchPalette {
+    static let rainbow = [
         Color(red: 1.00, green: 0.42, blue: 0.62),
         Color(red: 1.00, green: 0.62, blue: 0.26),
         Color(red: 1.00, green: 0.79, blue: 0.34),
         Color(red: 0.18, green: 0.80, blue: 0.44),
         Color(red: 0.00, green: 0.82, blue: 0.83),
         Color(red: 0.65, green: 0.37, blue: 0.92),
-    ],
+    ]
+    static let ocean = [
+        Color(red: 0.40, green: 0.85, blue: 0.95),
+        Color(red: 0.25, green: 0.65, blue: 0.95),
+        Color(red: 0.30, green: 0.45, blue: 0.92),
+        Color(red: 0.45, green: 0.35, blue: 0.90),
+    ]
+    static let sunset = [
+        Color(red: 1.00, green: 0.78, blue: 0.35),
+        Color(red: 1.00, green: 0.55, blue: 0.30),
+        Color(red: 0.98, green: 0.35, blue: 0.45),
+        Color(red: 0.85, green: 0.25, blue: 0.55),
+    ]
+    static let aurora = [
+        Color(red: 0.35, green: 0.95, blue: 0.70),
+        Color(red: 0.25, green: 0.80, blue: 0.80),
+        Color(red: 0.40, green: 0.55, blue: 0.95),
+        Color(red: 0.65, green: 0.40, blue: 0.95),
+    ]
+
+    static func colors(for name: String) -> [Color] {
+        switch name {
+        case "ocean": return ocean
+        case "sunset": return sunset
+        case "aurora": return aurora
+        default: return rainbow
+        }
+    }
+
+    /// 读取启动参数选定的配色（进程生命周期内固定）
+    static var selected: [Color] = {
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "--theme"), i + 1 < args.count {
+            return colors(for: args[i + 1])
+        }
+        return rainbow
+    }()
+}
+
+private let rainbow = LinearGradient(
+    colors: WatchPalette.selected,
     startPoint: .leading, endPoint: .trailing)
 
 private let rainbowAngular = AngularGradient(
-    colors: [
-        Color(red: 1.00, green: 0.42, blue: 0.62),
-        Color(red: 1.00, green: 0.62, blue: 0.26),
-        Color(red: 1.00, green: 0.79, blue: 0.34),
-        Color(red: 0.18, green: 0.80, blue: 0.44),
-        Color(red: 0.00, green: 0.82, blue: 0.83),
-        Color(red: 0.65, green: 0.37, blue: 0.92),
-        Color(red: 1.00, green: 0.42, blue: 0.62),
-    ],
+    colors: WatchPalette.selected + [WatchPalette.selected[0]],
     center: .center, startAngle: .degrees(-90), endAngle: .degrees(270))
 
 struct WatchCountdownView: View {

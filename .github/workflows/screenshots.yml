@@ -135,6 +135,12 @@ jobs:
           shot dark     "--open-journal" "iphone-5-journal.png"
           shot dark     "--open-poster"  "iphone-6-poster.png"
           shot red      ""              "iphone-7-red.png"
+
+          # App Store 只接受固定像素尺寸。Pro Max 模拟器原生输出 1320x2868（6.9"），
+          # 不在接受列表内，统一重采样为 1284x2778（6.5"，接受尺寸）。
+          for f in shots/iphone-*.png; do
+            sips -z 2778 1284 "$f" >/dev/null
+          done
           ls -la shots/
 
       - name: Build and capture Apple Watch screenshot
@@ -157,14 +163,27 @@ jobs:
           xcrun simctl spawn "$WUDID" defaults write "$GROUP" birthDate -float 897868800
           xcrun simctl spawn "$WUDID" defaults write "$GROUP" lifeExpectancyYears -float 80
           if [ "$LOCALE" = "zh-Hans" ]; then LANG1="(zh-Hans)"; else LANG1="(en)"; fi
-          xcrun simctl launch "$WUDID" "$BID.watchkitapp" -AppleLanguages "$LANG1"
-          sleep 5
-          xcrun simctl io "$WUDID" screenshot shots/watch-1-countdown.png
-          xcrun simctl terminate "$WUDID" "$BID.watchkitapp" 2>/dev/null || true
-          sleep 1
-          xcrun simctl launch "$WUDID" "$BID.watchkitapp" --page2 -AppleLanguages "$LANG1"
-          sleep 5
-          xcrun simctl io "$WUDID" screenshot shots/watch-2-progress.png
+
+          wshot() {  # $1 theme  $2 extra-arg(optional)  $3 filename
+            xcrun simctl terminate "$WUDID" "$BID.watchkitapp" 2>/dev/null || true
+            sleep 1
+            if [ -n "$2" ]; then
+              xcrun simctl launch "$WUDID" "$BID.watchkitapp" "$2" --theme "$1" -AppleLanguages "$LANG1"
+            else
+              xcrun simctl launch "$WUDID" "$BID.watchkitapp" --theme "$1" -AppleLanguages "$LANG1"
+            fi
+            sleep 5
+            xcrun simctl io "$WUDID" screenshot "shots/$3"
+          }
+
+          # 倒计时页 × 4 种配色 + 进度环页 × 2 种配色
+          wshot rainbow ""        "watch-1-countdown-rainbow.png"
+          wshot ocean   ""        "watch-2-countdown-ocean.png"
+          wshot sunset  ""        "watch-3-countdown-sunset.png"
+          wshot aurora  ""        "watch-4-countdown-aurora.png"
+          wshot rainbow "--page2" "watch-5-progress-rainbow.png"
+          wshot aurora  "--page2" "watch-6-progress-aurora.png"
+          ls -la shots/
 
       - name: Build and render macOS screenshot
         run: |
@@ -179,7 +198,7 @@ jobs:
             build | tail -3
           BIN=$(find DDmac/Build/Products/Debug -path "*DeadClockMac.app/Contents/MacOS/DeadClockMac" | head -1)
           if [ "$LOCALE" = "zh-Hans" ]; then LANG1="(zh-Hans)"; else LANG1="(en)"; fi
-          for STYLE in 1 2 3; do
+          for STYLE in 1 2 3 4 5; do
             "$BIN" --render-screenshot "$PWD/shots/mac-$STYLE.png" --shot-style "$STYLE" -AppleLanguages "$LANG1"
           done
           ls -la shots/

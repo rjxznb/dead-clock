@@ -51,6 +51,18 @@ struct MacScreenshotView: View {
                 Color(red: 0.55, green: 0.10, blue: 0.45),
                 Color(red: 0.95, green: 0.35, blue: 0.45),
             ]
+        case 4:
+            return [
+                Color(red: 0.02, green: 0.18, blue: 0.16),
+                Color(red: 0.05, green: 0.38, blue: 0.35),
+                Color(red: 0.20, green: 0.62, blue: 0.50),
+            ]
+        case 5:
+            return [
+                Color(red: 0.09, green: 0.06, blue: 0.20),
+                Color(red: 0.22, green: 0.14, blue: 0.45),
+                Color(red: 0.42, green: 0.30, blue: 0.78),
+            ]
         default:
             return [
                 Color(red: 0.10, green: 0.08, blue: 0.25),
@@ -62,16 +74,16 @@ struct MacScreenshotView: View {
 
     private var titleKey: LocalizedStringKey {
         switch variant {
-        case 2: return "mac.shot.title2"
-        case 3: return "mac.shot.title3"
+        case 2, 5: return "mac.shot.title2"
+        case 3, 4: return "mac.shot.title3"
         default: return "mac.shot.title"
         }
     }
 
     private var subtitleKey: LocalizedStringKey {
         switch variant {
-        case 2: return "mac.shot.subtitle2"
-        case 3: return "mac.shot.subtitle3"
+        case 2, 5: return "mac.shot.subtitle2"
+        case 3, 4: return "mac.shot.subtitle3"
         default: return "mac.shot.subtitle"
         }
     }
