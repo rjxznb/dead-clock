@@ -88,13 +88,19 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.rjxznb.deadclock
+        # Apple rejected "DeadClockMac" as the on-device name (2.3.8 name
+        # mismatch + 5.2.5 "Mac" trademark). Ship the product as "OneLife".
+        PRODUCT_NAME: OneLife
     info:
       path: DeadClockMac/Info.plist
       properties:
         CFBundleDisplayName: OneLife
+        CFBundleName: OneLife
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        LSUIElement: true
+        # No LSUIElement: a pure menu-bar (accessory) app shows no window on
+        # launch, which App Review flagged as "could not be launched" (2.1a).
+        # The app now opens a real window AND keeps the menu-bar item.
         LSApplicationCategoryType: public.app-category.productivity
         ITSAppUsesNonExemptEncryption: false
 

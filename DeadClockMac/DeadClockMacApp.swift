@@ -23,6 +23,13 @@ struct DeadClockMacApp: App {
     }
 
     var body: some Scene {
+        // A real window so the app launches with visible UI (App Review 2.1a).
+        Window("OneLife", id: "main") {
+            MacCountdownView()
+        }
+        .windowResizability(.contentSize)
+
+        // Plus the always-available menu-bar item.
         MenuBarExtra {
             MacCountdownView()
         } label: {

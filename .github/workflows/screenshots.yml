@@ -231,7 +231,7 @@ jobs:
             -derivedDataPath ./DDmac \
             CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
             build | tail -3
-          BIN=$(find DDmac/Build/Products/Debug -path "*DeadClockMac.app/Contents/MacOS/DeadClockMac" | head -1)
+          BIN=$(find DDmac/Build/Products/Debug -path "*.app/Contents/MacOS/*" -type f | head -1)
           if [ "$LOCALE" = "zh-Hans" ]; then LANG1="(zh-Hans)"; else LANG1="(en)"; fi
           for STYLE in 1 2 3 4 5; do
             "$BIN" --render-screenshot "$PWD/shots/mac-$STYLE.png" --shot-style "$STYLE" -AppleLanguages "$LANG1"
